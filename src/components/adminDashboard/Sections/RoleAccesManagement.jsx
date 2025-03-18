@@ -25,7 +25,7 @@ const RoleAccessManagement = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/RoleAccess/');
+      const response = await axios.get('http://localhost:8070/RoleAccess/');
       setRoles(response.data); // Set the fetched data to the state
     } catch (error) {
       setError(error.message); // Set error message if something goes wrong
@@ -37,7 +37,7 @@ const RoleAccessManagement = () => {
   // Delete a role from the database
   const deleteRole = async (roleId) => {
     try {
-      await axios.delete(`http://localhost:5000/RoleAccess/${roleId}`);
+      await axios.delete(`http://localhost:8070/RoleAccess/${roleId}`);
       setRoles((prevRoles) => prevRoles.filter((role) => role.role_id !== roleId)); // Remove the role from the state
       console.log('Role deleted successfully');
     } catch (error) {
@@ -71,7 +71,7 @@ const RoleAccessManagement = () => {
   // Add a new role to the database
   const addNewRole = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/RoleAccess/', newRole);
+      const response = await axios.post('http://localhost:8070/RoleAccess/', newRole);
       setRoles([...roles, response.data]); // Add the new role to the state
       setNewRole({ role_id: '', role_name: '', accessible_sections: [] }); // Reset form
       setShowAddForm(false); // Hide the form

@@ -32,7 +32,7 @@ const EmployeeManagement = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('http://localhost:5000/Employee/employees');
+      const response = await fetch('http://localhost:8070/Employee/employees');
       if (!response.ok) {
         throw new Error('Failed to fetch employees');
       }
@@ -48,7 +48,7 @@ const EmployeeManagement = () => {
   // Fetch roles from the backend
   const fetchRoles = async () => {
     try {
-      const response = await fetch('http://localhost:5000/RoleAccess/');
+      const response = await fetch('http://localhost:8070/RoleAccess/');
       if (!response.ok) {
         throw new Error('Failed to fetch roles');
       }
@@ -63,7 +63,7 @@ const EmployeeManagement = () => {
   // Update employee status in the database
   const updateEmployeeStatus = async (employeeId, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/Employee/employees/${employeeId}`, {
+      const response = await fetch(`http://localhost:8070/Employee/employees/${employeeId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ const EmployeeManagement = () => {
   // Handle form submission to add a new employee
   const addNewEmployee = async () => {
     try {
-      const response = await fetch('http://localhost:5000/Employee/register', {
+      const response = await fetch('http://localhost:8070/Employee/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

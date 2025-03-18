@@ -51,7 +51,7 @@ export default function ProfileSettings() {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/User/users/${id}`);
+        const response = await fetch(`http://localhost:8070/User/users/${id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch user details");
         }

@@ -18,7 +18,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/User/users');
+      const response = await fetch('http://localhost:8070/User/users');
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
@@ -34,7 +34,7 @@ const UserManagement = () => {
   // Update user status in the database
   const updateUserStatus = async (userId, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/User/users/${userId}`, {
+      const response = await fetch(`http://localhost:8070/User/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -14,6 +14,7 @@ import HelpSupport from './Sections/HelpSupport';
 import EmployeeManagement from './Sections/EmployeeManagement';
 import RoleAccessManagement from './Sections/RoleAccesManagement';
 import EmployeeTaskManagement from './Sections/EmployeeTaskManagement';
+import SuppliersManagement from './Sections/SuppliersManagement';
 
 function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -30,6 +31,8 @@ function AdminDashboard() {
         return <Appointments />;
       case 'online-store':
         return <OnlineStore />;
+      case 'supplier-management':
+        return <SuppliersManagement/>;
       case 'financial-management':
         return <FinancialManagement />;
       case 'community-feedback':

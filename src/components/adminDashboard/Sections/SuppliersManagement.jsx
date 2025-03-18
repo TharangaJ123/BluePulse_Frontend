@@ -7,34 +7,32 @@ import {
   FaPlus,        // Add Product
 } from 'react-icons/fa'; // Import icons
 
-const InventoryManagement = () => {
-  const [products, setProducts] = useState([]); // State to store product data
+const SuppliersManagement = () => {
+  
   const [loading, setLoading] = useState(true); // State to handle loading state
   const [error, setError] = useState(null); // State to handle errors
   const [showAddProductForm, setShowAddProductForm] = useState(false); // State to control form visibility
-  const [newProduct, setNewProduct] = useState({
+
+  const [suppliers, setSuppliers] = useState([]); // State to store product data
+  const [newSupplier, setNewSupplier] = useState({
     name: '',
-    price: '',
-    description: '',
-    image: null,
-    category: '',
-    quantity: '',
-    supplier:''
+    email: '',
+    phone: '',
   });
 
   // Fetch product data from the backend
   useEffect(() => {
-    fetchProducts();
+    fetchSuppliers();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchSuppliers = async () => {
     try {
-      const response = await fetch('http://localhost:8070/products/getAllProducts');
+      const response = await fetch('http://localhost:8070/suppliers/getAllSuppliers');
       if (!response.ok) {
-        throw new Error('Failed to fetch products');
+        throw new Error('Failed to fetch suppliers');
       }
       const data = await response.json();
-      setProducts(data); // Set the fetched data to the state
+      setSuppliers(data); // Set the fetched data to the state
     } catch (error) {
       setError(error.message); // Set error message if something goes wrong
     } finally {
@@ -52,7 +50,6 @@ const InventoryManagement = () => {
       product.imageUrl || 'N/A',
       product.category,
       product.quantity,
-      product.supplier
     ]);
 
     const csvContent = [
@@ -77,32 +74,23 @@ const InventoryManagement = () => {
     document.body.removeChild(link);
   };
 
-  const handleImageChange = (e) => {
-    setNewProduct({ ...newProduct, image: e.target.files[0] });
-  };
-
   // Function to handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewProduct({ ...newProduct, [name]: value });
+    setNewSupplier({ ...newSupplier, [name]: value });
   };
 
   // Function to handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append("name", newProduct.name);
-    formData.append("price", newProduct.price);
-    formData.append("description", newProduct.description);
-    formData.append("category", newProduct.category);
-    formData.append("quantity", newProduct.quantity);
-    formData.append("supplier", newProduct.supplier);
-    if (newProduct.image) {
-      formData.append("image", newProduct.image);
-    }
+    formData.append("name", newSupplier.name);
+    formData.append("email", newSupplier.email);
+    formData.append("phone", newSupplier.phone);
+    console.log(formData)
 
     try {
-      const response = await fetch("http://localhost:8070/products/addProduct", {
+      const response = await fetch("http://localhost:8070/suppliers/addSupplier", {
         method: "POST",
         body: formData,
       });
@@ -112,16 +100,12 @@ const InventoryManagement = () => {
       }
 
       const data = await response.json();
-      setProducts([...products, data]); // Add the new product to the list
+      setSuppliers([...suppliers, data]); // Add the new product to the list
       setShowAddProductForm(false); // Hide the form after submission
-      setNewProduct({
+      setNewSupplier({
         name: '',
-        price: '',
-        description: '',
-        image: null,
-        category: '',
-        quantity: '',
-        supplier:''
+        email: '',
+        phone: ''
       });
     } catch (error) {
       setError(error.message);
@@ -156,29 +140,29 @@ const InventoryManagement = () => {
     <main className="flex-1 p-8 overflow-y-auto">
       <h1 className="text-2xl font-bold text-blue-800 mb-6">Inventory Management</h1>
 
-      {/* Tiles for Product Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Total Products Tile */}
+      {/* Tiles for Product Statistics 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">*/}
+        {/* Total Products Tile x
         <div className="bg-gradient-to-r from-blue-100 to-blue-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
             <FaBox className="text-blue-600 mr-2" /> Total Products
           </h2>
           <p className="text-3xl font-bold text-blue-800">
-            {products.length}
+            {suppliers.length}
           </p>
-        </div>
+        </div>*/}
 
-        {/* In Stock Products Tile */}
+        {/* In Stock Products Tile 
         <div className="bg-gradient-to-r from-green-100 to-green-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
             <FaCheckCircle className="text-green-600 mr-2" /> In Stock
           </h2>
           <p className="text-3xl font-bold text-green-800">
-            {products.filter((product) => product.quantity > 0).length}
+            {products.filter((suppliers) => suppliers.quantity > 0).length}
           </p>
-        </div>
+        </div>*/}
 
-        {/* Out of Stock Products Tile */}
+        {/* Out of Stock Products Tile 
         <div className="bg-gradient-to-r from-red-100 to-red-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
             <FaTimesCircle className="text-red-600 mr-2" /> Out of Stock
@@ -187,7 +171,7 @@ const InventoryManagement = () => {
             {products.filter((product) => product.quantity === 0).length}
           </p>
         </div>
-      </div>
+      </div>*/}
 
       {/* Add Product Button */}
       <div className="mb-6">
@@ -202,76 +186,36 @@ const InventoryManagement = () => {
       {/* Add Product Form */}
       {showAddProductForm && (
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6 w-200">
-          <h2 className="text-xl font-bold mb-4">Add New Product</h2>
+          <h2 className="text-xl font-bold mb-4">Add New Supplier</h2>
           <form method='post' onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-gray-700">Product Name</label>
+              <label className="block text-gray-700">Supplier Name</label>
               <input
                 type="text"
                 name="name"
-                value={newProduct.name}
+                value={newSupplier.name}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
                 required
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Price</label>
-              <input
-                type="number"
-                name="price"
-                value={newProduct.price}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Description</label>
+              <label className="block text-gray-700">Email Address</label>
               <input
                 type="text"
-                name="description"
-                value={newProduct.description}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Category</label>
-              <input
-                type="text"
-                name="category"
-                value={newProduct.category}
+                name="email"
+                value={newSupplier.email}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
                 required
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Quantity</label>
-              <input
-                type="number"
-                name="quantity"
-                value={newProduct.quantity}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Image</label>
-              <input
-                type="file"
-                name="image"
-                onChange={handleImageChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Supplier ID</label>
+              <label className="block text-gray-700">Telephone Number</label>
               <input
                 type="text"
-                name="supplier"
+                name="phone"
+                value={newSupplier.phone}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
               />
@@ -281,7 +225,7 @@ const InventoryManagement = () => {
                 type="submit"
                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300"
               >
-                Add Product
+                Register the supplier
               </button>
             </div>
           </form>
@@ -303,31 +247,19 @@ const InventoryManagement = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b">
-              <th className="text-left p-3 text-gray-700">Product Name</th>
-              <th className="text-left p-3 text-gray-700">Price</th>
-              <th className="text-left p-3 text-gray-700">Description</th>
-              <th className="text-left p-3 text-gray-700">Image</th>
-              <th className="text-left p-3 text-gray-700">Category</th>
-              <th className="text-left p-3 text-gray-700">Quantity</th>
-              <th className="text-left p-3 text-gray-700">Supplier ID</th>
+              <th className="text-left p-3 text-gray-700">Supplier Name</th>
+              <th className="text-left p-3 text-gray-700">Supplier Name</th>
+              <th className="text-left p-3 text-gray-700">Email</th>
+              <th className="text-left p-3 text-gray-700">Phone</th>
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
-              <tr key={product._id} className="border-b">
-                <td className="p-3">{product.name}</td>
-                <td className="p-3">{product.price}</td>
-                <td className="p-3">{product.description || 'N/A'}</td>
-                <td className="p-3">
-                  {product.imageUrl ? (
-                    <img src={`http://localhost:8070${product.imageUrl}`} className="w-30 h-30"/>
-                  ) : (
-                    <span>No Image</span>
-                  )}
-                </td>
-                <td className="p-3">{product.category}</td>
-                <td className="p-3">{product.quantity}</td>
-                <td className="p-3">{product.supplier}</td>
+            {suppliers.map((supplier) => (
+              <tr key={supplier._id} className="border-b">
+                <td className="p-3">{supplier._id}</td>
+                <td className="p-3">{supplier.name}</td>
+                <td className="p-3">{supplier.email}</td>
+                <td className="p-3">{supplier.phone || 'N/A'}</td>
               </tr>
             ))}
           </tbody>
@@ -337,4 +269,4 @@ const InventoryManagement = () => {
   );
 };
 
-export default InventoryManagement;
+export default SuppliersManagement;

@@ -13,6 +13,8 @@ const Navbar = () => {
         <Link to='/WaterQuality'>
             <h1 className='text-black'>Water Quality Testing</h1>
         </Link>
+    
+        
     </div>
   )
 }

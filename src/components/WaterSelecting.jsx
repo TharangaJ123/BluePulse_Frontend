@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Water = () => {
+  const navigate = useNavigate();
+
   const tiles = [
     {
       id: 1,
@@ -32,6 +35,10 @@ const Water = () => {
     },
   ];
 
+  const handleTileClick = (link) => {
+    navigate(link); // Use navigate() to move to the water quality test page
+  };
+
   return (
     <section className="py-20 bg-gradient-to-r from-blue-50 to-blue-100">
       <div className="container mx-auto px-4">
@@ -40,19 +47,19 @@ const Water = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {tiles.map((tile) => (
-            <a
+            <div
               key={tile.id}
-              href={tile.link}
               className="block relative bg-white rounded-2xl shadow-xl overflow-hidden transition-transform transform hover:scale-105 duration-300"
+              onClick={() => handleTileClick(tile.link)} // Add onClick handler for navigation
             >
               <div className="aspect-w-16 aspect-h-9">
-                <video 
-                  src={tile.videoSrc} 
-                  alt={tile.title} 
-                  className="object-cover w-full h-full" 
-                  autoPlay 
-                  muted 
-                  loop 
+                <video
+                  src={tile.videoSrc}
+                  alt={tile.title}
+                  className="object-cover w-full h-full"
+                  autoPlay
+                  muted
+                  loop
                 /> {/* Use video tag */}
               </div>
               <div className="p-8">
@@ -64,7 +71,7 @@ const Water = () => {
                 </p>
               </div>
               <div className="absolute inset-0 bg-black bg-opacity-10 hover:bg-opacity-0 transition-opacity duration-300"></div>
-            </a>
+            </div>
           ))}
         </div>
       </div>

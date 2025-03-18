@@ -3,6 +3,7 @@ import {
   FaCheckCircle, // Active
   FaPauseCircle, // Inactive
   FaUserSlash,   // Banned
+  FaDownload,    // Download
 } from 'react-icons/fa'; // Import icons
 
 const UserManagement = () => {
@@ -80,6 +81,40 @@ const UserManagement = () => {
     updateUserStatus(userId, newStatus); // Update the status in the database
   };
 
+  // Function to convert user data to CSV
+  const convertToCSV = (data) => {
+    const headers = ['Full Name', 'Email', 'Phone Number', 'Status', 'Created At', 'Updated At'];
+    const rows = data.map(user => [
+      user.full_name,
+      user.email,
+      user.phone_number || 'N/A',
+      user.status,
+      new Date(user.created_at).toLocaleString(),
+      new Date(user.updated_at).toLocaleString(),
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    return csvContent;
+  };
+
+  // Function to trigger CSV download
+  const downloadCSV = () => {
+    const csvData = convertToCSV(users);
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'user_details.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Display loading state
   if (loading) {
     return (
@@ -140,6 +175,16 @@ const UserManagement = () => {
             {users.filter((user) => user.status === 'banned').length}
           </p>
         </div>
+      </div>
+
+      {/* Download Button */}
+      <div className="mb-6">
+        <button
+          onClick={downloadCSV}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
+        >
+          <FaDownload className="mr-2" /> Download User Details
+        </button>
       </div>
 
       {/* User Details Table */}

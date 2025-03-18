@@ -13,6 +13,7 @@ import {
   FaCog,                   // Settings
   FaQuestionCircle,        // Help & Support
   FaBars,                  // Sidebar Toggle
+  FaTasks,                 // Employee Task Management
 } from 'react-icons/fa'; // Import icons
 
 const Sidebar = ({ setActiveSection, activeSection }) => {
@@ -23,6 +24,7 @@ const Sidebar = ({ setActiveSection, activeSection }) => {
     { text: 'Dashboard', key: 'dashboard', icon: <FaHome /> },
     { text: 'User Management', key: 'user-management', icon: <FaUsers /> },
     { text: 'Employee Management', key: 'employee-management', icon: <FaUserTie /> },
+    { text: 'Employee Task Management', key: 'employee-task-management', icon: <FaTasks /> }, // New section
     { text: 'Water Quality Testing', key: 'water-quality-testing', icon: <FaFlask /> },
     { text: 'Appointments', key: 'appointments', icon: <FaCalendarAlt /> },
     { text: 'Online Store & Inventory', key: 'online-store', icon: <FaStore /> },

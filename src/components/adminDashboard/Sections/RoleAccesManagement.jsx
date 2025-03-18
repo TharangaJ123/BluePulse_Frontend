@@ -34,49 +34,16 @@ const RoleAccessManagement = () => {
     }
   };
 
-  // Update role accessible sections in the database
-  const updateRoleSections = async (roleId, newSections) => {
-    try {
-      const response = await axios.put(`http://localhost:5000/api/role-access/${roleId}`, {
-        accessible_sections: newSections,
-      });
-
-      // Update the specific role in the state
-      setRoles((prevRoles) =>
-        prevRoles.map((role) =>
-          role.role_id === roleId ? { ...role, accessible_sections: newSections } : role
-        )
-      );
-
-      console.log('Role sections updated successfully:', response.data);
-    } catch (error) {
-      console.error('Error updating role sections:', error);
-      setError(error.message);
-    }
-  };
-
   // Delete a role from the database
   const deleteRole = async (roleId) => {
     try {
-      await axios.delete(`http://localhost:5000/RoleAccess/role-access/${roleId}`);
+      await axios.delete(`http://localhost:5000/RoleAccess/${roleId}`);
       setRoles((prevRoles) => prevRoles.filter((role) => role.role_id !== roleId)); // Remove the role from the state
       console.log('Role deleted successfully');
     } catch (error) {
       console.error('Error deleting role:', error);
       setError(error.message);
     }
-  };
-
-  // Handle section checkbox change
-  const handleSectionChange = (roleId, section, isChecked) => {
-    const role = roles.find((role) => role.role_id === roleId);
-    let newSections;
-    if (isChecked) {
-      newSections = [...role.accessible_sections, section];
-    } else {
-      newSections = role.accessible_sections.filter((sec) => sec !== section);
-    }
-    updateRoleSections(roleId, newSections); // Update the sections in the database
   };
 
   // Handle input change for new role form
@@ -262,31 +229,11 @@ const RoleAccessManagement = () => {
                 <td className="p-3 text-gray-800">{role.role_id}</td>
                 <td className="p-3 text-gray-800">{role.role_name}</td>
                 <td className="p-3 text-gray-800">
-                  {[
-                    'Dashboard',
-                    'User Management',
-                    'Employee Management',
-                    'Water Quality Testing',
-                    'Appointments',
-                    'Online Store & Inventory',
-                    'Financial Management',
-                    'Community & Feedback',
-                    'Reports & Analytics',
-                    'Settings',
-                    'Help & Support',
-                  ].map((section) => (
-                    <label key={section} className="block">
-                      <input
-                        type="checkbox"
-                        value={section}
-                        checked={role.accessible_sections.includes(section)}
-                        onChange={(e) =>
-                          handleSectionChange(role.role_id, section, e.target.checked)
-                        }
-                        className="mr-2"
-                      />
-                      {section}
-                    </label>
+                  {role.accessible_sections.map((section) => (
+                    <div key={section} className="flex items-center">
+                      <FaCheckCircle className="text-green-500 mr-2" />
+                      <span>{section}</span>
+                    </div>
                   ))}
                 </td>
                 <td className="p-3">

@@ -13,6 +13,7 @@ import Settings from './Sections/Settings';
 import HelpSupport from './Sections/HelpSupport';
 import EmployeeManagement from './Sections/EmployeeManagement';
 import RoleAccessManagement from './Sections/RoleAccesManagement';
+import EmployeeTaskManagement from './Sections/EmployeeTaskManagement';
 
 function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -41,10 +42,12 @@ function AdminDashboard() {
         return <HelpSupport />;
       default:
         return <MainContent />;
-            case 'employee-management':
+      case 'employee-management':
             return <EmployeeManagement />;
-            case 'roleAccess-management':
+      case 'roleAccess-management':
             return <RoleAccessManagement />;
+      case 'employee-task-management':
+        return <EmployeeTaskManagement />;
     }
   };
 

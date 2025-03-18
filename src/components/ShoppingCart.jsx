@@ -59,7 +59,7 @@ const ShoppingCart = () => {
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="w-30 h-30 rounded-full object-cover"
+                      className="w-30 h-30 object-cover"
                     />
                     <div>
                       <h3 className="font-medium">{item.name}</h3>

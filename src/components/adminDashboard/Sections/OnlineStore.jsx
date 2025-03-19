@@ -19,8 +19,9 @@ const InventoryManagement = () => {
     image: null,
     category: '',
     quantity: '',
-    supplier:''
+    supplier: '',
   });
+  const [quantities, setQuantities] = useState({}); // State to manage quantities for each product
 
   // Fetch product data from the backend
   useEffect(() => {
@@ -35,6 +36,13 @@ const InventoryManagement = () => {
       }
       const data = await response.json();
       setProducts(data); // Set the fetched data to the state
+
+      // Initialize quantities state with current product quantities
+      const initialQuantities = data.reduce((acc, product) => {
+        acc[product._id] = product.quantity;
+        return acc;
+      }, {});
+      setQuantities(initialQuantities);
     } catch (error) {
       setError(error.message); // Set error message if something goes wrong
     } finally {
@@ -44,22 +52,18 @@ const InventoryManagement = () => {
 
   // Function to convert product data to CSV
   const convertToCSV = (data) => {
-    const headers = ['Product Name', 'Price', 'Description', 'Image URL', 'Category', 'Quantity'];
-    const rows = data.map(product => [
+    const headers = ['Product Name', 'Price', 'Description', 'Image URL', 'Category', 'Quantity', 'Supplier ID'];
+    const rows = data.map((product) => [
       product.name,
       product.price,
       product.description || 'N/A',
       product.imageUrl || 'N/A',
       product.category,
       product.quantity,
-      product.supplier
+      product.supplier,
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
+    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     return csvContent;
   };
 
@@ -91,24 +95,24 @@ const InventoryManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append("name", newProduct.name);
-    formData.append("price", newProduct.price);
-    formData.append("description", newProduct.description);
-    formData.append("category", newProduct.category);
-    formData.append("quantity", newProduct.quantity);
-    formData.append("supplier", newProduct.supplier);
+    formData.append('name', newProduct.name);
+    formData.append('price', newProduct.price);
+    formData.append('description', newProduct.description);
+    formData.append('category', newProduct.category);
+    formData.append('quantity', newProduct.quantity);
+    formData.append('supplier', newProduct.supplier);
     if (newProduct.image) {
-      formData.append("image", newProduct.image);
+      formData.append('image', newProduct.image);
     }
 
     try {
-      const response = await fetch("http://localhost:8070/products/addProduct", {
-        method: "POST",
+      const response = await fetch('http://localhost:8070/products/addProduct', {
+        method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add product");
+        throw new Error('Failed to add product');
       }
 
       const data = await response.json();
@@ -121,10 +125,34 @@ const InventoryManagement = () => {
         image: null,
         category: '',
         quantity: '',
-        supplier:''
+        supplier: '',
       });
     } catch (error) {
       setError(error.message);
+    }
+  };
+
+  // Function to check product quantity
+  const checkProductQuantity = async (productId, newQuantity) => {
+    try {
+      const response = await fetch(`http://localhost:8070/products/${productId}/quantity`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quantity: newQuantity }), // Pass product ID and quantity
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to check quantity');
+      }
+
+      const result = await response.json();
+      console.log(result); // Log the response from the backend
+      alert('Quantity checked successfully!');
+    } catch (error) {
+      console.error('Error checking quantity:', error);
+      alert('Failed to check quantity.');
     }
   };
 
@@ -163,9 +191,7 @@ const InventoryManagement = () => {
           <h2 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
             <FaBox className="text-blue-600 mr-2" /> Total Products
           </h2>
-          <p className="text-3xl font-bold text-blue-800">
-            {products.length}
-          </p>
+          <p className="text-3xl font-bold text-blue-800">{products.length}</p>
         </div>
 
         {/* In Stock Products Tile */}
@@ -203,7 +229,7 @@ const InventoryManagement = () => {
       {showAddProductForm && (
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6 w-200">
           <h2 className="text-xl font-bold mb-4">Add New Product</h2>
-          <form method='post' onSubmit={handleSubmit}>
+          <form method="post" onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-gray-700">Product Name</label>
               <input
@@ -320,13 +346,42 @@ const InventoryManagement = () => {
                 <td className="p-3">{product.description || 'N/A'}</td>
                 <td className="p-3">
                   {product.imageUrl ? (
-                    <img src={`http://localhost:8070${product.imageUrl}`} className="w-30 h-30"/>
+                    <img src={`http://localhost:8070${product.imageUrl}`} className="w-30 h-30" alt={product.name} />
                   ) : (
                     <span>No Image</span>
                   )}
                 </td>
-                <td className="p-3">{product.category}</td>
-                <td className="p-3">{product.quantity}</td>
+                <td className="p-3 whitespace-nowrap">{product.category}</td>
+                <td className="p-3">
+                  {quantities[product._id] < 10 ? (
+                    <>
+                      <input
+                        type="number"
+                        value={quantities[product._id] || ''}
+                        onChange={(e) =>
+                          setQuantities((prevQuantities) => ({
+                            ...prevQuantities,
+                            [product._id]: e.target.value,
+                          }))
+                        }
+                        className="w-20 p-1 border rounded"
+                      />
+                      <button
+                        onClick={() => checkProductQuantity(product._id, quantities[product._id])}
+                        className={`ml-2 text-white px-2 py-1 rounded ${
+                          quantities[product._id] < 10
+                            ? 'bg-red-500 hover:bg-red-600' // Red color for low quantity
+                            : 'bg-emerald-700 hover:bg-emerald-700' // Blue color for normal quantity
+                        }`}
+                      >
+                        Notify to supplier
+                      </button>
+                    </>
+                  ) : (
+                    <span>{quantities[product._id]}</span> // Display quantity if it's normal
+                  )}
+                </td>
+
                 <td className="p-3">{product.supplier}</td>
               </tr>
             ))}

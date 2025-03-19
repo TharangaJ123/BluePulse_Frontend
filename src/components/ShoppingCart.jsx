@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 
 const ShoppingCart = () => {
@@ -29,6 +30,43 @@ const ShoppingCart = () => {
     (total, item) => total + item.price * item.quantity,
     0
   );
+
+    // Function to handle checkout and update product quantities
+    const handleCheckout = async () => {
+      try {
+        const updatedCart = await Promise.all(
+          cartItems.map(async (item) => {
+            // get current items quantity from the database
+            const response = await axios.get(`http://localhost:8070/products/getProduct/${item.id}`);
+            const currentQuantity = response.data.quantity;
+  
+            // Calculate the new quantity
+            const newQuantity = currentQuantity - item.quantity;
+            if (newQuantity < 0) {
+              alert(`Not enough stock for ${item.name}!`);
+              return item; // Keep it in the cart
+            }
+  
+            // Update quantity in the backend
+            await axios.put(`http://localhost:8070/products/${item.id}`, { quantity: newQuantity });
+  
+            return null; // Remove item from cart after checkout
+          })
+        );
+  
+        // Remove items that were checked out successfully
+        const filteredCart = updatedCart.filter((item) => item !== null);
+  
+        // Update local storage and state
+        setCartItems(filteredCart);
+        localStorage.setItem("cart", JSON.stringify(filteredCart));
+  
+        alert("Checkout successful!");
+      } catch (error) {
+        console.error("Error updating product quantities:", error);
+        alert("Error processing checkout. Please try again.");
+      }
+    };
 
   return (
     <div className="h-screen w-full bg-gray-100 flex flex-col justify-center items-center">
@@ -91,7 +129,7 @@ const ShoppingCart = () => {
               <p className="text-lg font-semibold">
                 Total: LKR {totalPrice.toFixed(2)}
               </p>
-              <button className="mt-3 px-6 py-2 bg-blue-950 text-white font-medium rounded hover:bg-blue-800">
+              <button className="mt-3 px-6 py-2 bg-blue-950 text-white font-medium rounded hover:bg-blue-800" onClick={handleCheckout}>
                 Proceed to Checkout
               </button>
             </div>

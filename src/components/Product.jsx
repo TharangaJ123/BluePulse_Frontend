@@ -1,39 +1,56 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 import OnlineStoreNavigationBar from "./OnlineStoreNavigationBar";
-
-const products = [
-  {
-    id: 1,
-    name: "Product A",
-    price: 29.99,
-    image: "https://picsum.photos/400",
-  },
-  {
-    id: 2,
-    name: "Puritas Water Purifier Classic (HD-CLASSIC)",
-    price: 8900.0,
-    image: "https://picsum.photos/400",
-  },
-  {
-    id: 3,
-    name: "Product C",
-    price: 49.99,
-    image: "/assets/img1.jpg",
-  },
-];
 
 export default function Product() {
   const { id } = useParams();
-  const product = products.find((p) => p.id === parseInt(id));
+  const [name,setName] = useState("");
+  const [price,setPrice] = useState("");
+  const [description,setDescription] = useState("");
+  const [imageUrl,setImageUrl] = useState("");
+  const [category,setCategory] = useState("");
+  const [quantity,setQuantity] = useState("");
 
-  if (!product) {
-    return (
-      <div className="container mx-auto p-4">
-        <p className="text-red-500 text-xl">Product not found</p>
-      </div>
-    );
-  }
+  useEffect(()=>{
+    function getProduct(){
+      axios.get(`http://localhost:8070/products/getProduct/${id}`).then((res)=>{
+        setName(res.data.name);
+        setPrice(res.data.price);
+        setDescription(res.data.description);
+        setImageUrl(res.data.imageUrl);
+        setCategory(res.data.category);
+        setQuantity(res.data.quantity);
+      }).catch((err)=>{
+        console.log(err);
+      });
+    }
+    getProduct();
+  },[id]);
+
+  
+  const addToCart = () => {
+    const product = {
+      id,
+      name,
+      price: Number(price),
+      image: `http://localhost:8070${imageUrl}`,
+      quantity: 1,
+    };
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const existingItem = cart.find((item) => item.id === id);
+
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push(product);
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    alert("Item added to cart!");
+  };
+
 
   return (
     <div className="min-h-screen w-full top-20 mt-20">
@@ -46,8 +63,8 @@ export default function Product() {
             <div className="flex flex-col">
               
               <img
-                src={product.image}
-                alt={product.name}
+                src={`http://localhost:8070${imageUrl}`}
+                alt={name}
                 className="w-full max-h-120 object-cover rounded-lg"
               />
             </div>
@@ -56,12 +73,10 @@ export default function Product() {
             <div className="flex flex-col justify-between">
               <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  {product.name}
+                  {name}
               </h1>
                 <p className="text-gray-600 text-lg mb-6">
-                  Lorem Ipsum is simply dummy text of the printing and typesetting
-                  industry. It has been the industry's standard dummy text ever
-                  since the 1500s.
+                  {description}
                 </p>
               </div>
 
@@ -92,11 +107,22 @@ export default function Product() {
               {/* Price and Add to Cart */}
               <div className="mt-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Price: LKR {product.price.toFixed(2)}
+                  Price: LKR {Number(price).toFixed(2)}
                 </h2>
-                <button className="w-full md:w-auto px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-300">
-                  Add to Cart
-                </button>
+                <div className="flex space-x-4">
+                  <button
+                    onClick={addToCart}
+                    className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-300"
+                  >
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={() => navigate("/cart")}
+                    className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300"
+                  >
+                    Go to Cart
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -141,6 +167,7 @@ export default function Product() {
             </tbody>
           </table>
         </div>
+
       </div>
     </div>
   );

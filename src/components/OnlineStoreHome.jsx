@@ -47,7 +47,7 @@ export default function OnlineStoreHome() {
 
                 {/* Product Image */}
                 <img
-                  src={`http://localhost:8070/${product.imageUrl}`}
+                  src={`http://localhost:8070${product.imageUrl}`}
                   alt={product.name}
                   className="w-full h-56 object-cover"
                 />
@@ -61,14 +61,14 @@ export default function OnlineStoreHome() {
                     LKR {product.price.toFixed(2)}
                   </p>
                   <Link
-                    to={`/product/${product._id}`}
+                    to={`/singleProduct/${product._id}`}
                     className={`block mt-4 text-center py-2 px-4 rounded-lg transition-colors duration-300 ${
-                      product.quantity === "in_stock"
+                      product.quantity > 0
                         ? "bg-blue-600 text-white hover:bg-blue-700"
                         : "bg-gray-400 text-white cursor-not-allowed"
                     }`}
                     onClick={(e) => {
-                      if (product.quantity === "out_of_stock") {
+                      if (product.quantity == 0) {
                         e.preventDefault(); // Prevent navigation if out of stock
                       }
                     }}

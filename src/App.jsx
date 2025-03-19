@@ -14,7 +14,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<OnlineStoreHome/>} />
-          <Route path="/product/:id" element={<Product/>} />
+          <Route path="/singleProduct/:id" element={<Product/>} />
           <Route path="/cart" element={<ShoppingCart/>} />
         </Routes>
       </Router>

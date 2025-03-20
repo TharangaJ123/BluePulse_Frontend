@@ -6,13 +6,15 @@ import {
   FaDownload,    // Download
   FaPlus,        // Add Product
 } from 'react-icons/fa'; // Import icons
+import jsPDF from 'jspdf'; // Import jsPDF library
+import autoTable from 'jspdf-autotable';
+import logo from "../../../assets/logo1.png"; // Import logo
 
 const SuppliersManagement = () => {
   
   const [loading, setLoading] = useState(true); // State to handle loading state
   const [error, setError] = useState(null); // State to handle errors
-  const [showAddProductForm, setShowAddProductForm] = useState(false); // State to control form visibility
-
+  const [ShowAddSupplierForm, setShowAddSupplierForm] = useState(false);
   const [suppliers, setSuppliers] = useState([]); // State to store product data
   const [newSupplier, setNewSupplier] = useState({
     name: '',
@@ -40,44 +42,56 @@ const SuppliersManagement = () => {
     }
   };
 
-  // Function to convert product data to CSV
-  const convertToCSV = (data) => {
-    const headers = ['Product Name', 'Price', 'Description', 'Image URL', 'Category', 'Quantity'];
-    const rows = data.map(product => [
-      product.name,
-      product.price,
-      product.description || 'N/A',
-      product.imageUrl || 'N/A',
-      product.category,
-      product.quantity,
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
-    return csvContent;
-  };
-
-  // Function to trigger CSV download
-  const downloadCSV = () => {
-    const csvData = convertToCSV(products);
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'inventory_details.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Function to handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewSupplier({ ...newSupplier, [name]: value });
+  const downloadPDF = async () => {
+    try {
+      const doc = new jsPDF();
+  
+      // Convert image to Base64
+      const response = await fetch(logo);
+      const blob = await response.blob();
+      const reader = new FileReader();
+  
+      reader.onloadend = function () {
+        const base64data = reader.result; // Base64 string
+  
+        // Add image to PDF
+        doc.addImage(base64data, "PNG", 10, 10, 40, 20);
+  
+        // Add company details
+        doc.setFontSize(14);
+        doc.text("The Cafe House", 55, 20);
+        doc.setFontSize(10);
+        doc.text("123 Main Street, Colombo", 55, 26);
+        doc.text("Phone: +94 71 234 5678", 55, 32);
+  
+        // Add title
+        doc.setFontSize(18);
+        doc.text("Supplier Details", 10, 50);
+  
+        // Define table headers and data
+        const headers = ["Supplier Name", "Email", "Phone"];
+        const data = suppliers.map((supplier) => [
+          supplier.name,
+          supplier.email,
+          supplier.phone || "N/A",
+        ]);
+  
+        // Generate table
+        autoTable(doc, {
+          head: [headers],
+          body: data,
+          startY: 60,
+        });
+  
+        // Save the PDF
+        doc.save("supplier_details.pdf");
+      };
+  
+      reader.readAsDataURL(blob); // Convert Blob to Base64
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      setError("Failed to generate PDF");
+    }
   };
 
   // Function to handle form submission
@@ -101,7 +115,7 @@ const SuppliersManagement = () => {
 
       const data = await response.json();
       setSuppliers([...suppliers, data]); // Add the new product to the list
-      setShowAddProductForm(false); // Hide the form after submission
+      setShowAddSupplierForm(false); // Hide the form after submission
       setNewSupplier({
         name: '',
         email: '',
@@ -176,15 +190,15 @@ const SuppliersManagement = () => {
       {/* Add Product Button */}
       <div className="mb-6">
         <button
-          onClick={() => setShowAddProductForm(!showAddProductForm)}
+          onClick={() => setShowAddSupplierForm(!ShowAddSupplierForm)}
           className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300 flex items-center"
         >
-          <FaPlus className="mr-2" /> {showAddProductForm ? 'Hide Form' : 'Add Product'}
+          <FaPlus className="mr-2" /> {ShowAddSupplierForm ? 'Hide Form' : 'Add Product'}
         </button>
       </div>
 
       {/* Add Product Form */}
-      {showAddProductForm && (
+      {ShowAddSupplierForm && (
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6 w-200">
           <h2 className="text-xl font-bold mb-4">Add New Supplier</h2>
           <form method='post' onSubmit={handleSubmit}>
@@ -235,7 +249,7 @@ const SuppliersManagement = () => {
       {/* Download Button */}
       <div className="mb-6">
         <button
-          onClick={downloadCSV}
+          onClick={downloadPDF}
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
         >
           <FaDownload className="mr-2" /> Download Inventory Details

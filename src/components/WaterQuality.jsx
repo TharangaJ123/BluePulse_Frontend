@@ -120,7 +120,7 @@ const WaterQuality = () => {
   return (
     <div className="max-w-7xl mx-auto p-10 bg-white rounded-lg shadow-lg">
       <h1 className="text-4xl font-bold text-center mb-6">
-        Water Quality Test for {waterType.charAt(0).toUpperCase() + waterType.slice(1)}
+        Water Quality Test for {waterType ? (waterType.charAt(0).toUpperCase() + waterType.slice(1)) : 'Unknown'}
       </h1>
 
       {/* Full-Width Message Alerts */}

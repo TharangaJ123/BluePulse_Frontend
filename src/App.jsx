@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+import React,{ useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
+import './App.css'
+import HomePage from './components/HomePage'
+
+=======
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import React,{ useState } from "react";
 
@@ -11,9 +19,13 @@ import Register from './components/userManagement/Register';
 import AdminDashboard from './components/adminDashboard/AdminDashboard';
 import { Navigate } from "react-router-dom";
  
+>>>>>>> main
 function App() {
   return (
     <>
+<<<<<<< HEAD
+      <HomePage/>
+=======
       <Router>
         <Routes>
           <Route path="/" element={<OnlineStoreHome/>} />
@@ -36,6 +48,7 @@ function App() {
  
         </Routes>
       </Router>
+>>>>>>> main
     </>
   );
 }

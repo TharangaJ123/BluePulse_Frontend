@@ -81,13 +81,7 @@ const SignIn = () => {
                   onClick={handleGoogleSignIn}
                   className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline"
                 >
-                  <div className="bg-white p-2 rounded-full">
-                    <img
-                      className="w-4"
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png"
-                      alt="Google"
-                    />
-                  </div>
+                  
                   <span className="ml-4">Sign In with Google</span>
                 </button>
               </div>
@@ -158,7 +152,7 @@ const SignIn = () => {
                   </button>
                   <p className="mt-6 text-xs text-gray-600 text-center">
                     Don't have an account?{" "}
-                    <Link to="/signup" className="text-indigo-500">
+                    <Link to="/Register" className="text-indigo-500">
                       Sign Up
                     </Link>
                   </p>

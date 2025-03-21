@@ -20,11 +20,10 @@ const EmployeeManagement = () => {
     email: '',
     password: 'password123', // Default password (can be customized)
     phone_number: '',
-    employee_position: '',
-    role: '', // Role for the new employee
+    employee_position: '', // Employee position (selectable from roles)
   }); // State for new employee data
 
-  // Fetch employee data from the backend
+  // Fetch employee data and roles from the backend
   useEffect(() => {
     fetchEmployees();
     fetchRoles(); // Fetch roles when the component mounts
@@ -130,7 +129,7 @@ const EmployeeManagement = () => {
           password: newEmployee.password,
           phone_number: newEmployee.phone_number,
           employee_position: newEmployee.employee_position,
-          role: newEmployee.role, // Include the selected role
+          role: 'employee', // Fixed role as "employee"
         }),
       });
 
@@ -139,16 +138,7 @@ const EmployeeManagement = () => {
       }
 
       const addedEmployee = await response.json();
-      console.log('Backend Response:', addedEmployee); // Log the response
-
-      // Ensure the response contains all required fields
-      if (
-        !addedEmployee._id ||
-        !addedEmployee.full_name ||
-        !addedEmployee.email
-      ) {
-        throw new Error('Invalid employee data returned from the backend');
-      }
+      console.log('Backend Response:', addedEmployee);
 
       // Add the new employee to the state
       setEmployees((prevEmployees) => [...prevEmployees, addedEmployee]);
@@ -157,10 +147,9 @@ const EmployeeManagement = () => {
       setNewEmployee({
         full_name: '',
         email: '',
-        password: 'password123', // Reset to default password
+        password: 'password123',
         phone_number: '',
         employee_position: '',
-        role: '', // Reset role
       });
 
       // Hide the form
@@ -198,8 +187,8 @@ const EmployeeManagement = () => {
       employee.full_name,
       employee.email,
       employee.phone_number || 'N/A',
-      employee.employee_position || 'N/A',
-      employee.role || 'N/A',
+      employee.employee_position,
+      employee.role || 'employee', // Default role
       employee.status,
       new Date(employee.createdAt).toLocaleString(),
       new Date(employee.updatedAt).toLocaleString(),
@@ -299,24 +288,14 @@ const EmployeeManagement = () => {
               />
             </div>
             <div>
-              <label className="block text-gray-700">Position</label>
-              <input
-                type="text"
+              <label className="block text-gray-700">Employee Position</label>
+              <select
                 name="employee_position"
                 value={newEmployee.employee_position}
                 onChange={handleNewEmployeeChange}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700">Role</label>
-              <select
-                name="role"
-                value={newEmployee.role}
-                onChange={handleNewEmployeeChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select a role</option>
+                <option value="">Select a position</option>
                 {roles.map((role) => (
                   <option key={role._id} value={role.role_name}>
                     {role.role_name}
@@ -392,7 +371,7 @@ const EmployeeManagement = () => {
                 <td className="p-3 text-gray-800">{employee.email}</td>
                 <td className="p-3 text-gray-800">{employee.phone_number || 'N/A'}</td>
                 <td className="p-3 text-gray-800">{employee.employee_position || 'N/A'}</td>
-                <td className="p-3 text-gray-800">{employee.role || 'N/A'}</td>
+                <td className="p-3 text-gray-800">{employee.role || 'employee'}</td>
                 <td className="p-3">
                   <button
                     onClick={() => handleStatusChange(employee._id, employee.status)}

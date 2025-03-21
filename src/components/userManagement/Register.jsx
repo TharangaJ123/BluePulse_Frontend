@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 const Register = () => {
   // State to manage form inputs
   const [formData, setFormData] = useState({
-    full_name: "", // Changed from fullName
+    full_name: "",
     email: "",
-    phone_number: "", // Changed from telephone
+    phone_number: "",
     password: "",
   });
 
@@ -24,28 +24,27 @@ const Register = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:8070/User/register", {
+      const response = await fetch("http://localhost:8070/User/form-reg", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData), // Send data in the required format
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
         const data = await response.json();
         console.log("Registration successful:", data);
-        alert("Registration successful!"); // Show success alert
-        // Optionally, you can redirect the user to the login page
+        alert("Registration successful!");
         window.location.href = "/Login";
       } else {
-        const errorData = await response.json(); // Parse error response
+        const errorData = await response.json();
         console.error("Registration failed:", errorData);
-        alert(`Registration failed: ${errorData.error || "Unknown error"}`); // Show error alert
+        alert(`Registration failed: ${errorData.error || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error during registration:", error);
-      alert("An error occurred. Please try again."); // Show error alert
+      alert("An error occurred. Please try again.");
     }
   };
 
@@ -68,7 +67,7 @@ const Register = () => {
                   <input
                     className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
                     type="text"
-                    name="full_name" // Changed from fullName
+                    name="full_name"
                     placeholder="Full Name"
                     value={formData.full_name}
                     onChange={handleChange}
@@ -86,7 +85,7 @@ const Register = () => {
                   <input
                     className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
                     type="tel"
-                    name="phone_number" // Changed from telephone
+                    name="phone_number"
                     placeholder="Phone Number"
                     value={formData.phone_number}
                     onChange={handleChange}

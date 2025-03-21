@@ -7,12 +7,14 @@ import Product from "./components/Product";
 import ShoppingCart from "./components/ShoppingCart";
 import UserProfile from './components/userManagement/UserProfile';
 import Login from './components/userManagement/Login';
-import Register from './components/userManagement/Register';
+
 import AdminDashboard from './components/adminDashboard/AdminDashboard';
 import { Navigate } from "react-router-dom";
 import WaterQuality from "./components/WaterQuality";
 import Water from "./components/WaterSelecting";
 import ServiceRequest from "./components/ServiceRequest";
+import SignIn from "./components/userManagement/Login";
+import Register from "./components/userManagement/Register";
  
 function App() {
   return (
@@ -24,17 +26,16 @@ function App() {
           <Route path="/onlineStoreHome" element={<OnlineStoreHome/>} />
           <Route path="/singleProduct/:id" element={<Product/>} />
           <Route path="/cart" element={<ShoppingCart/>} />
-          {/* Root route redirects to /Login by default */}
-          <Route path="/login" element={<Navigate to="/Login" />} />
+         
  
           {/* Route for UserProfile with dynamic `id` parameter */}
           <Route path="/UserProfile/:id" element={<UserProfile />} />
  
           {/* Route for Register */}
-          <Route path="/Register" element={<Register />} />
+          <Route path="/Register" element={<Register/>} />
  
           {/* Route for Login */}
-          <Route path="/Login" element={<Login />} />
+          <Route path="/Login" element={<SignIn />} />
  
           {/* Route for Login */}
           <Route path="/AdminDashboard" element={<AdminDashboard/>} />

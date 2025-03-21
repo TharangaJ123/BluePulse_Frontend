@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import axios from 'axios';
 import OnlineStoreNavigationBar from "./OnlineStoreNavigationBar";
 import OnlineStoreHeroSection from "./OnlineStoreHeroSection";
+import NavigationBar from "./NavigationBar";
+import Footer from "./Footer";
 
 
 
@@ -23,11 +25,12 @@ export default function OnlineStoreHome() {
 
   return (
     <>
-      <OnlineStoreNavigationBar />
+      <NavigationBar/>
       <div className="mx-auto">
         <OnlineStoreHeroSection />
+        <OnlineStoreNavigationBar />
         {/* Product List */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8" id="explore-section">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6 justify-items-center">
             {product.map((product) => (
               <div
@@ -81,6 +84,7 @@ export default function OnlineStoreHome() {
           </div>
         </div>
       </div>
+      <Footer/>
     </>
   );
 }

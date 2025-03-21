@@ -179,9 +179,11 @@ const InventoryManagement = () => {
         // Update the product in the list
         setProducts(products.map((p) => (p._id === productToUpdate._id ? data : p)));
         setProductToUpdate(null); // Clear the product to update
+        window.location.href = "#";
       } else {
         // Add the new product to the list
         setProducts([...products, data]);
+        window.location.href = "#";
       }
       setShowAddProductForm(false); // Hide the form after submission
       setNewProduct({

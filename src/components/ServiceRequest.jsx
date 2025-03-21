@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaRegCheckCircle, FaEnvelope, FaPhoneAlt, FaCalendarAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import NavigationBar from './NavigationBar';
+import Footer from './Footer';
 
 // Custom hook for form handling
 const useForm = (initialState, validate) => {
@@ -134,10 +136,10 @@ const ServiceRequest = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
   
-
+      <NavigationBar/>
       {/* Main Content */}
       <main className="flex-grow container mx-auto px-6 py-8">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+        <div className="bg-white p-8 max-w-4xl mx-auto">
           <h2 className="text-3xl font-semibold text-blue-600 text-center mb-6">Request Our Services</h2>
 
           {submissionStatus && (
@@ -218,13 +220,10 @@ const ServiceRequest = () => {
             >
               {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </button>
-            <Link to="/ServiceRequest/:ServiceReqAdmin" className="block text-center text-blue-600 mt-4 hover:underline">
-              View All Requests
-            </Link>
           </form>
         </div>
       </main>
-
+      <Footer/>
     
     </div>
   );

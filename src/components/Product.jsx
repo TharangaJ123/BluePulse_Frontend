@@ -1,34 +1,38 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import OnlineStoreNavigationBar from "./OnlineStoreNavigationBar";
+import NavigationBar from "./NavigationBar";
+import Footer from "./Footer";
 
 export default function Product() {
   const { id } = useParams();
-  const [name,setName] = useState("");
-  const [price,setPrice] = useState("");
-  const [description,setDescription] = useState("");
-  const [imageUrl,setImageUrl] = useState("");
-  const [category,setCategory] = useState("");
-  const [quantity,setQuantity] = useState("");
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [category, setCategory] = useState("");
+  const [quantity, setQuantity] = useState("");
 
-  useEffect(()=>{
-    function getProduct(){
-      axios.get(`http://localhost:8070/products/getProduct/${id}`).then((res)=>{
-        setName(res.data.name);
-        setPrice(res.data.price);
-        setDescription(res.data.description);
-        setImageUrl(res.data.imageUrl);
-        setCategory(res.data.category);
-        setQuantity(res.data.quantity);
-      }).catch((err)=>{
-        console.log(err);
-      });
+  useEffect(() => {
+    function getProduct() {
+      axios
+        .get(`http://localhost:8070/products/getProduct/${id}`)
+        .then((res) => {
+          setName(res.data.name);
+          setPrice(res.data.price);
+          setDescription(res.data.description);
+          setImageUrl(res.data.imageUrl);
+          setCategory(res.data.category);
+          setQuantity(res.data.quantity);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
     getProduct();
-  },[id]);
+  }, [id]);
 
-  
   const addToCart = () => {
     const product = {
       id,
@@ -51,9 +55,9 @@ export default function Product() {
     alert("Item added to cart!");
   };
 
-
   return (
-    <div className="min-h-screen w-full top-20 mt-20">
+    <div className="min-h-screen w-full ">
+      <NavigationBar />
       <OnlineStoreNavigationBar />
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Product Details Section */}
@@ -61,7 +65,6 @@ export default function Product() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
             {/* Product Image */}
             <div className="flex flex-col">
-              
               <img
                 src={`http://localhost:8070${imageUrl}`}
                 alt={name}
@@ -72,12 +75,10 @@ export default function Product() {
             {/* Product Information */}
             <div className="flex flex-col justify-between">
               <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
                   {name}
-              </h1>
-                <p className="text-gray-600 text-lg mb-6">
-                  {description}
-                </p>
+                </h1>
+                <p className="text-gray-600 text-lg mb-6">{description}</p>
               </div>
 
               {/* Delivery and Warranty Info */}
@@ -116,12 +117,11 @@ export default function Product() {
                   >
                     Add to Cart
                   </button>
-                  <button
-                    onClick={() => navigate("/cart")}
-                    className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300"
-                  >
-                    Go to Cart
-                  </button>
+                  <Link to={"/cart"}>
+                    <button className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300">
+                      Go to Cart
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -167,8 +167,8 @@ export default function Product() {
             </tbody>
           </table>
         </div>
-
       </div>
+      <Footer />
     </div>
   );
 }

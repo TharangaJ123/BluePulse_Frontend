@@ -6,8 +6,6 @@ import HeroSection from './HeroSection';
 import Services from './Services';
 import HomeFeedbackFormSection from './HomeFeedbackFormSection';
 import WhySelectUsSection from './WhySelectUsSection';
-import BenefitsSection from './BenefitsSection';
-import ChatBot from './ChatBot';
 
 export default function HomePage() {
   return (
@@ -24,10 +22,6 @@ export default function HomePage() {
         <Services/>
 
         <HomeFeedbackFormSection/>
-
-        <BenefitsSection/>
-        
-        <ChatBot/>
 
         <Footer/>
     </div>

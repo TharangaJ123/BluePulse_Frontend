@@ -4,6 +4,7 @@ import axios from "axios";
 import OnlineStoreNavigationBar from "./OnlineStoreNavigationBar";
 import NavigationBar from "./NavigationBar";
 import Footer from "./Footer";
+import AfterServicesOnlineStore from "./AfterServicesOnlineStore";
 
 export default function Product() {
   const { id } = useParams();
@@ -127,47 +128,8 @@ export default function Product() {
             </div>
           </div>
         </div>
-
-        {/* Specifications Table */}
-        <div className="bg-white mt-8 p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Specifications
-          </h2>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-3 text-left text-gray-700 uppercase font-semibold">
-                  Specification
-                </th>
-                <th className="p-3 text-left text-gray-700 uppercase font-semibold">
-                  Description
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { spec: "Material", desc: "High-quality plastic" },
-                { spec: "Dimensions", desc: "20 x 15 x 10 cm" },
-                { spec: "Weight", desc: "1.5 kg" },
-                { spec: "Color", desc: "White" },
-                { spec: "Warranty", desc: "1 year" },
-              ].map((row, index) => (
-                <tr
-                  key={index}
-                  className="hover:bg-gray-50 transition-colors duration-200"
-                >
-                  <td className="p-3 border-b border-gray-200 text-gray-800">
-                    {row.spec}
-                  </td>
-                  <td className="p-3 border-b border-gray-200 text-gray-800">
-                    {row.desc}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
+      <AfterServicesOnlineStore/>
       <Footer />
     </div>
   );

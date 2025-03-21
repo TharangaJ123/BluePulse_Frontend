@@ -6,26 +6,36 @@ import OnlineStoreHeroSection from "./OnlineStoreHeroSection";
 import NavigationBar from "./NavigationBar";
 import Footer from "./Footer";
 
-
-
 export default function OnlineStoreHome() {
+  const [product, setProduct] = useState([]);
 
-  const[product,setProduct] = useState([]);
-
-  useEffect(()=>{
-    function getProducts(){
-      axios.get("http://localhost:8070/products/getAllProducts").then((res)=>{
-        setProduct(res.data);
-      }).catch((err)=>{
-        console.log(err);
-      });
+  useEffect(() => {
+    function getProducts() {
+      axios.get("http://localhost:8070/products/getAllProducts")
+        .then((res) => {
+          setProduct(res.data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
-    getProducts()
-  },[]);
+    getProducts();
+  }, []);
+
+  // Function to determine stock status
+  const getStockStatus = (quantity) => {
+    if (quantity === 0) {
+      return "Out of Stock";
+    } else if (quantity < 10) {
+      return "Low Stock";
+    } else {
+      return "In Stock";
+    }
+  };
 
   return (
     <>
-      <NavigationBar/>
+      <NavigationBar />
       <div className="mx-auto">
         <OnlineStoreHeroSection />
         <OnlineStoreNavigationBar />
@@ -40,12 +50,14 @@ export default function OnlineStoreHome() {
                 {/* Stock Status Tag */}
                 <div
                   className={`absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-semibold ${
-                    product.stock === "in_stock"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
+                    getStockStatus(product.quantity) === "Out of Stock"
+                      ? "bg-red-100 text-red-800"
+                      : getStockStatus(product.quantity) === "Low Stock"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-green-100 text-green-800"
                   }`}
                 >
-                  {product.stock === "in_stock" ? "In Stock" : "Out of Stock"}
+                  {getStockStatus(product.quantity)}
                 </div>
 
                 {/* Product Image */}
@@ -71,12 +83,12 @@ export default function OnlineStoreHome() {
                         : "bg-gray-400 text-white cursor-not-allowed"
                     }`}
                     onClick={(e) => {
-                      if (product.quantity == 0) {
+                      if (product.quantity === 0) {
                         e.preventDefault(); // Prevent navigation if out of stock
                       }
                     }}
                   >
-                    {product.quantity === "in_stock" ? "View Product" : "Out of Stock"}
+                    {product.quantity > 0 ? "View Product" : "Out of Stock"}
                   </Link>
                 </div>
               </div>
@@ -84,7 +96,7 @@ export default function OnlineStoreHome() {
           </div>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </>
   );
 }

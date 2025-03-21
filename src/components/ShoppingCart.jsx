@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
+import { Navigate } from "react-router-dom";
 
 const ShoppingCart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -62,6 +63,7 @@ const ShoppingCart = () => {
         localStorage.setItem("cart", JSON.stringify(filteredCart));
   
         alert("Checkout successful!");
+        window.location.href="/waterResourceFinance";
       } catch (error) {
         console.error("Error updating product quantities:", error);
         alert("Error processing checkout. Please try again.");

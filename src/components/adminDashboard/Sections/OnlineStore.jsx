@@ -27,10 +27,12 @@ const InventoryManagement = () => {
   });
   const [quantities, setQuantities] = useState({}); // State to manage quantities for each product
   const [productToUpdate, setProductToUpdate] = useState(null); // State to store the product being updated
+  const [suppliers, setSuppliers] = useState([]); // State to store supplier IDs
 
   // Fetch product data from the backend
   useEffect(() => {
     fetchProducts();
+    fetchSuppliers();
   }, []);
 
   const fetchProducts = async () => {
@@ -54,6 +56,19 @@ const InventoryManagement = () => {
       setError(error.message); // Set error message if something goes wrong
     } finally {
       setLoading(false); // Set loading to false after fetching
+    }
+  };
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await fetch("http://localhost:8070/suppliers/getAllSuppliers");
+      if (!response.ok) {
+        throw new Error("Failed to fetch suppliers");
+      }
+      const data = await response.json();
+      setSuppliers(data); // Set the fetched supplier IDs to the state
+    } catch (error) {
+      setError(error.message); // Set error message if something goes wrong
     }
   };
 
@@ -389,13 +404,20 @@ const InventoryManagement = () => {
             </div>
             <div className="mb-4">
               <label className="block text-gray-700">Supplier ID</label>
-              <input
-                type="text"
+              <select
                 name="supplier"
                 value={productToUpdate ? productToUpdate.supplier : newProduct.supplier}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
-              />
+                required
+              >
+                <option value="">Select Supplier</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier._id} value={supplier._id}>
+                    {supplier.name} ({supplier._id})
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex justify-end">
               <button

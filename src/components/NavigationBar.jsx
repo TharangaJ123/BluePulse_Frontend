@@ -20,10 +20,9 @@ export default function NavigationBar() {
         <ul className="flex space-x-6">
           {[
             { name: "Home", path: "/" },
-            { name: "About", path: "/about" },
             { name: "Water Quality Testings", path: "/WaterTesting" },
             { name: "Store", path: "/onlineStoreHome" },
-            { name: "Community", path: "/community" },
+            { name: "Community", path: "/Community" },
           ].map((item, index) => (
             <motion.li
               key={index}

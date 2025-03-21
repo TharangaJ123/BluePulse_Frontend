@@ -5,6 +5,8 @@ import {
   FaUserSlash,   // Banned
   FaPlus,        // Add New Employee
   FaFilePdf,     // PDF Download
+  FaEdit,        // Edit Employee
+  FaTrash,       // Delete Employee
 } from 'react-icons/fa'; // Import icons
 import jsPDF from 'jspdf';
 import 'jspdf-autotable'; // Plugin for generating tables in PDF
@@ -22,6 +24,8 @@ const EmployeeManagement = () => {
     phone_number: '',
     employee_position: '', // Employee position (selectable from roles)
   }); // State for new employee data
+  const [editingEmployeeId, setEditingEmployeeId] = useState(null); // State to track which employee is being edited
+  const [editingEmployeePosition, setEditingEmployeePosition] = useState(''); // State to store the edited position
 
   // Fetch employee data and roles from the backend
   useEffect(() => {
@@ -205,6 +209,70 @@ const EmployeeManagement = () => {
     doc.save('employee_report.pdf');
   };
 
+  // Function to handle editing employee position
+  const handleEditPosition = (employeeId, currentPosition) => {
+    setEditingEmployeeId(employeeId);
+    setEditingEmployeePosition(currentPosition);
+  };
+
+  // Function to save the edited position
+  const saveEditedPosition = async (employeeId) => {
+    try {
+      const response = await fetch(`http://localhost:8070/Employee/employees/${employeeId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ employee_position: editingEmployeePosition }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update employee position');
+      }
+
+      const updatedEmployee = await response.json();
+
+      // Update the specific employee in the state
+      setEmployees((prevEmployees) =>
+        prevEmployees.map((employee) =>
+          employee._id === employeeId ? { ...employee, employee_position: editingEmployeePosition } : employee
+        )
+      );
+
+      // Reset editing state
+      setEditingEmployeeId(null);
+      setEditingEmployeePosition('');
+
+      console.log('Employee position updated successfully:', updatedEmployee);
+    } catch (error) {
+      console.error('Error updating employee position:', error);
+      setError(error.message);
+    }
+  };
+
+  // Function to delete an employee
+  const deleteEmployee = async (employeeId) => {
+    try {
+      const response = await fetch(`http://localhost:8070/Employee/employees/${employeeId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete employee');
+      }
+
+      // Remove the employee from the state
+      setEmployees((prevEmployees) =>
+        prevEmployees.filter((employee) => employee._id !== employeeId)
+      );
+
+      console.log('Employee deleted successfully');
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      setError(error.message);
+    }
+  };
+
   // Display loading state
   if (loading) {
     return (
@@ -359,6 +427,7 @@ const EmployeeManagement = () => {
               <th className="text-left p-3 text-gray-700">Status</th>
               <th className="text-left p-3 text-gray-700">Created At</th>
               <th className="text-left p-3 text-gray-700">Updated At</th>
+              <th className="text-left p-3 text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -370,7 +439,24 @@ const EmployeeManagement = () => {
                 <td className="p-3 text-gray-800">{employee.full_name}</td>
                 <td className="p-3 text-gray-800">{employee.email}</td>
                 <td className="p-3 text-gray-800">{employee.phone_number || 'N/A'}</td>
-                <td className="p-3 text-gray-800">{employee.employee_position || 'N/A'}</td>
+                <td className="p-3 text-gray-800">
+                  {editingEmployeeId === employee._id ? (
+                    <select
+                      value={editingEmployeePosition}
+                      onChange={(e) => setEditingEmployeePosition(e.target.value)}
+                      className="w-full px-2 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select a position</option>
+                      {roles.map((role) => (
+                        <option key={role._id} value={role.role_name}>
+                          {role.role_name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    employee.employee_position || 'N/A'
+                  )}
+                </td>
                 <td className="p-3 text-gray-800">{employee.role || 'employee'}</td>
                 <td className="p-3">
                   <button
@@ -400,6 +486,31 @@ const EmployeeManagement = () => {
                 </td>
                 <td className="p-3 text-gray-800">
                   {new Date(employee.updatedAt).toLocaleString()}
+                </td>
+                <td className="p-3 text-gray-800">
+                  {editingEmployeeId === employee._id ? (
+                    <button
+                      onClick={() => saveEditedPosition(employee._id)}
+                      className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition duration-300"
+                    >
+                      Save
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleEditPosition(employee._id, employee.employee_position)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition duration-300"
+                    >
+                      <FaEdit />
+                    </button>
+                  )}
+                  {(employee.status === 'inactive' || employee.status === 'banned') && (
+                    <button
+                      onClick={() => deleteEmployee(employee._id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition duration-300 ml-2"
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

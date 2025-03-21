@@ -16,6 +16,7 @@ export default function OnlineStoreNavigationBar() {
           {/* Navigation Links */}
           <div className="hidden md:flex space-x-8">
             <a href="/" className="text-white hover:text-blue-600 font-medium">Shop</a>
+            <a href="/" className="text-white hover:text-blue-600 font-medium">Test Kits</a>
             <a href="/shop" className="text-white hover:text-blue-600 font-medium">Spare Parts</a>
             <a href="/deals" className="text-white hover:text-blue-600 font-medium">Purification Items</a>
           </div>

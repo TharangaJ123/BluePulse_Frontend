@@ -16,6 +16,9 @@ import ServiceRequest from "./components/ServiceRequest";
 import SignIn from "./components/userManagement/Login";
 import Register from "./components/userManagement/Register";
 import WaterResourceFinanceForm from "./components/WaterResourceFinanceForm";
+import CommunitySection from "./components/CommunitySection";
+import CommunityPost from "./components/CommunityPost";
+import FeedbackForm from "./components/FeedbackForm";
  
 function App() {
   return (
@@ -47,6 +50,9 @@ function App() {
           <Route path="/waterQuality/:waterType" element={<WaterQuality />} />
 
           <Route path="/waterResourceFinance" element={<WaterResourceFinanceForm/>} />
+          <Route path="/Community" element={<CommunitySection/>} />
+          <Route path="/SingleCommunity/:id" element={<CommunityPost/>} />
+          <Route path="/FeedbackForm" element={<FeedbackForm/>} />
  
         </Routes>
       </Router>

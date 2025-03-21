@@ -2,6 +2,38 @@ import { motion } from "framer-motion";
 import React from "react";
 
 export default function HomeFeedbackFormSection() {
+  // Function to handle form submission
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
+
+    // Get form data
+    const formData = new FormData(event.target);
+    const name = formData.get("name");
+    const email = formData.get("email");
+    const message = formData.get("message");
+
+    // Send data to the backend
+    try {
+      const response = await fetch("http://localhost:8070/Contact/addContact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, message }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit the form");
+      }
+
+      const result = await response.json();
+      alert(result.message); // Show success message
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Failed to submit the form. Please try again.");
+    }
+  };
+
   return (
     <div className="w-full bg-blue-950 py-20">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -19,7 +51,7 @@ export default function HomeFeedbackFormSection() {
             <p className="text-white mb-8">
               Share your feedback or inquiries, and we'll get back to you shortly.
             </p>
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Full Name Input */}
               <div>
                 <label

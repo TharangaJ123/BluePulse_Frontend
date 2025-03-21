@@ -59,7 +59,7 @@ const SignIn = () => {
   // Handle Google Sign-In
   const handleGoogleSignIn = () => {
     // Redirect the user to the backend's Google OAuth endpoint
-    window.location.href = "http://localhost:8070/auth/google";
+    window.location.href = "http://localhost:5000/auth/google";
   };
 
   return (

@@ -15,6 +15,7 @@ import Water from "./components/WaterSelecting";
 import ServiceRequest from "./components/ServiceRequest";
 import SignIn from "./components/userManagement/Login";
 import Register from "./components/userManagement/Register";
+import WaterResourceFinanceForm from "./components/WaterResourceFinanceForm";
  
 function App() {
   return (
@@ -44,6 +45,8 @@ function App() {
           <Route path='/ServiceRequest' element={<ServiceRequest/>} />
           <Route path='/WaterQuality' element={<WaterQuality />} />
           <Route path="/waterQuality/:waterType" element={<WaterQuality />} />
+
+          <Route path="/waterResourceFinance" element={<WaterResourceFinanceForm/>} />
  
         </Routes>
       </Router>

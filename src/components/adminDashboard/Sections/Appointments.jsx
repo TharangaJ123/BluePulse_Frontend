@@ -29,7 +29,7 @@ const Appointment = () => {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('http://localhost:5003/api/services/');
+      const response = await fetch('http://localhost:8070/api/services/');
       if (!response.ok) throw new Error('Failed to fetch requests');
       const data = await response.json();
       setRequests(data);
@@ -49,7 +49,7 @@ const Appointment = () => {
   // Handle Save Edit
   const handleSaveEdit = async (updatedRequest) => {
     try {
-      const response = await fetch(`http://localhost:5003/api/services/${updatedRequest._id}`, {
+      const response = await fetch(`http://localhost:8070/api/services/${updatedRequest._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedRequest),
@@ -67,7 +67,7 @@ const Appointment = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this request?")) return;
     try {
-      const response = await fetch(`http://localhost:5003/api/services/${id}`, {
+      const response = await fetch(`http://localhost:8070/api/services/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete request');

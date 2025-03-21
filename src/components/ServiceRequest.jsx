@@ -113,7 +113,7 @@ const ServiceRequest = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5003/api/services/', {
+      const response = await fetch('http://localhost:8070/api/services/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

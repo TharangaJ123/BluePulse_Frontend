@@ -3,9 +3,12 @@ import React, { useState } from 'react';
 const EmployeeTaskManagement = () => {
   // Sample data for service types, services, and employees
   const serviceTypes = [
-    { id: 1, name: 'Filtration' },
-    { id: 2, name: 'Chemical Treatment' },
-    { id: 3, name: 'Maintenance' },
+    
+      { id: 1, name: 'Consultation' },
+      { id: 2, name: 'Water Testing' },
+      { id: 3, name: 'Installation' },
+      { id: 4, name: 'Maintenance' },
+    
   ];
 
   const services = [

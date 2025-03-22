@@ -19,6 +19,7 @@ import WaterResourceFinanceForm from "./components/WaterResourceFinanceForm";
 import CommunitySection from "./components/CommunitySection";
 import CommunityPost from "./components/CommunityPost";
 import FeedbackForm from "./components/FeedbackForm";
+import AdminSignIn from "./components/adminDashboard/AdminLogin";
  
 function App() {
   return (
@@ -42,7 +43,7 @@ function App() {
           <Route path="/Login" element={<SignIn />} />
  
           {/* Route for Login */}
-          <Route path="/AdminDashboard" element={<AdminDashboard/>} />
+          <Route path="/AdminDashboard/:employeeId" element={<AdminDashboard/>} />
 
           <Route path='/WaterTesting' element={<Water/>} />
           <Route path='/ServiceRequest' element={<ServiceRequest/>} />
@@ -53,7 +54,7 @@ function App() {
           <Route path="/Community" element={<CommunitySection/>} />
           <Route path="/SingleCommunity/:id" element={<CommunityPost/>} />
           <Route path="/FeedbackForm" element={<FeedbackForm/>} />
- 
+          <Route path="/AdminLogin" element={<AdminSignIn/>} />
         </Routes>
       </Router>
     </>

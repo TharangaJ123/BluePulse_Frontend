@@ -20,9 +20,13 @@ import CommunitySection from "./components/CommunitySection";
 import CommunityPost from "./components/CommunityPost";
 import FeedbackForm from "./components/FeedbackForm";
 import AdminSignIn from "./components/adminDashboard/AdminLogin";
+<<<<<<< HEAD
 import OnlineStoreHome_TestKits from "./components/OnlineStoreHome_TestKits";
 import OnlineStoreHome_SpareParts from "./components/OnlineStoreHome_SpareParts";
 import OnlineStoreHome_PurificationItems from "./components/OnlineStoreHome_PurificationItems";
+=======
+import EmployeeProfile from "./components/adminDashboard/EmployeeProfile";
+>>>>>>> b3174eee19a50e56f8eeda6af20f7ff71467f427
  
 function App() {
   return (
@@ -63,6 +67,7 @@ function App() {
           <Route path="/SingleCommunity/:id" element={<CommunityPost/>} />
           <Route path="/FeedbackForm" element={<FeedbackForm/>} />
           <Route path="/AdminLogin" element={<AdminSignIn/>} />
+          <Route path="/AdminProfile/:id" element={<EmployeeProfile/>} />
         </Routes>
       </Router>
     </>

@@ -15,10 +15,10 @@ export default function OnlineStoreNavigationBar() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex space-x-8">
-            <a href="/" className="text-white hover:text-blue-600 font-medium">Shop</a>
-            <a href="/" className="text-white hover:text-blue-600 font-medium">Test Kits</a>
-            <a href="/shop" className="text-white hover:text-blue-600 font-medium">Spare Parts</a>
-            <a href="/deals" className="text-white hover:text-blue-600 font-medium">Purification Items</a>
+            <Link to="/onlineStoreHome" className="text-white hover:text-blue-600 font-medium">Shop</Link>
+            <Link to="/onlineStoreHome_testkits" className="text-white hover:text-blue-600 font-medium">Test Kits</Link>
+            <Link to="/onlineStoreHome_spareparts" className="text-white hover:text-blue-600 font-medium">Spare Parts</Link>
+            <Link to="/onlineStoreHome_purificationitems" className="text-white hover:text-blue-600 font-medium">Purification Items</Link>
           </div>
 
           {/* Search Bar & Cart */}

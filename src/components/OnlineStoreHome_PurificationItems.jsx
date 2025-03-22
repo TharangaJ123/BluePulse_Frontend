@@ -6,7 +6,7 @@ import OnlineStoreHeroSection from "./OnlineStoreHeroSection";
 import NavigationBar from "./NavigationBar";
 import Footer from "./Footer";
 
-export default function OnlineStoreHome() {
+export default function OnlineStoreHome_PurificationItems() {
   const [product, setProduct] = useState([]);
 
   useEffect(() => {
@@ -44,6 +44,7 @@ export default function OnlineStoreHome() {
         <div className="container mx-auto px-4 py-8" id="explore-section">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6 justify-items-center">
             {product.map((product) =>
+              product.category === "Purification Items" ? (
                 <div
                   key={product._id}
                   className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 transform hover:-translate-y-1 w-70 relative"
@@ -93,6 +94,7 @@ export default function OnlineStoreHome() {
                     </Link>
                   </div>
                 </div>
+              ) : null
             )}
           </div>
         </div>

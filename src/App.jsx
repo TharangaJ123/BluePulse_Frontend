@@ -20,6 +20,9 @@ import CommunitySection from "./components/CommunitySection";
 import CommunityPost from "./components/CommunityPost";
 import FeedbackForm from "./components/FeedbackForm";
 import AdminSignIn from "./components/adminDashboard/AdminLogin";
+import OnlineStoreHome_TestKits from "./components/OnlineStoreHome_TestKits";
+import OnlineStoreHome_SpareParts from "./components/OnlineStoreHome_SpareParts";
+import OnlineStoreHome_PurificationItems from "./components/OnlineStoreHome_PurificationItems";
  
 function App() {
   return (
@@ -28,7 +31,12 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage/>} />
+
           <Route path="/onlineStoreHome" element={<OnlineStoreHome/>} />
+          <Route path="/onlineStoreHome_testkits" element={<OnlineStoreHome_TestKits/>} />
+          <Route path="/onlineStoreHome_spareparts" element={<OnlineStoreHome_SpareParts/>} />
+          <Route path="/onlineStoreHome_purificationitems" element={<OnlineStoreHome_PurificationItems/>} />
+
           <Route path="/singleProduct/:id" element={<Product/>} />
           <Route path="/cart" element={<ShoppingCart/>} />
          

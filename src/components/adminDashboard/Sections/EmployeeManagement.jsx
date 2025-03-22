@@ -4,12 +4,11 @@ import {
   FaPauseCircle, // Inactive
   FaUserSlash,   // Banned
   FaPlus,        // Add New Employee
-  FaFilePdf,     // PDF Download
+  FaFileCsv,     // CSV Download
   FaEdit,        // Edit Employee
   FaTrash,       // Delete Employee
+  FaSearch,      // Search Icon
 } from 'react-icons/fa'; // Import icons
-import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // Plugin for generating tables in PDF
 
 const EmployeeManagement = () => {
   const [employees, setEmployees] = useState([]); // State to store employee data
@@ -26,6 +25,7 @@ const EmployeeManagement = () => {
   }); // State for new employee data
   const [editingEmployeeId, setEditingEmployeeId] = useState(null); // State to track which employee is being edited
   const [editingEmployeePosition, setEditingEmployeePosition] = useState(''); // State to store the edited position
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
 
   // Fetch employee data and roles from the backend
   useEffect(() => {
@@ -166,16 +166,10 @@ const EmployeeManagement = () => {
     }
   };
 
-  // Function to generate and download PDF report
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-
-    // Add title
-    doc.setFontSize(18);
-    doc.text('Employee Report', 14, 22);
-
-    // Define table columns
-    const columns = [
+  // Function to generate and download CSV report
+  const downloadCSV = () => {
+    // Define CSV headers
+    const headers = [
       'Full Name',
       'Email',
       'Phone Number',
@@ -198,15 +192,22 @@ const EmployeeManagement = () => {
       new Date(employee.updatedAt).toLocaleString(),
     ]);
 
-    // Add table to PDF
-    doc.autoTable({
-      head: [columns],
-      body: rows,
-      startY: 30, // Start table below the title
-    });
+    // Combine headers and rows
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(','))
+      .join('\n');
 
-    // Save the PDF
-    doc.save('employee_report.pdf');
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    // Create a link element to trigger the download
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'employee_report.csv';
+    link.click();
+
+    // Clean up
+    URL.revokeObjectURL(link.href);
   };
 
   // Function to handle editing employee position
@@ -273,6 +274,13 @@ const EmployeeManagement = () => {
     }
   };
 
+  // Filter employees based on search query
+  const filteredEmployees = employees.filter((employee) =>
+    employee.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.employee_position.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Display loading state
   if (loading) {
     return (
@@ -311,13 +319,27 @@ const EmployeeManagement = () => {
           <FaPlus className="mr-2" /> Add New Employee
         </button>
 
-        {/* Download PDF Button */}
+        {/* Download CSV Button */}
         <button
-          onClick={downloadPDF}
-          className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center hover:bg-red-600 transition duration-300"
+          onClick={downloadCSV}
+          className="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-600 transition duration-300"
         >
-          <FaFilePdf className="mr-2" /> Download Report (PDF)
+          <FaFileCsv className="mr-2" /> Download Report (CSV)
         </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search employees by name, email, or position"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <FaSearch className="absolute left-3 top-3 text-gray-500" />
+        </div>
       </div>
 
       {/* Add New Employee Form */}
@@ -431,7 +453,7 @@ const EmployeeManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {employees.map((employee) => (
+            {filteredEmployees.map((employee) => (
               <tr
                 key={employee._id}
                 className="border-b hover:bg-gray-50 transition duration-200"

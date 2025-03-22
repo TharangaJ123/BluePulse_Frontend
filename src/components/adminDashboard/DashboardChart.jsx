@@ -1,90 +1,144 @@
-import React from "react";
-import { Chart as ChartJS, BarElement, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend } from "chart.js";
-import { Bar, Line } from "react-chartjs-2";
-
-// Register Chart.js components
-ChartJS.register(
-  BarElement,
-  LineElement,
-  PointElement,
-  LinearScale,
-  CategoryScale,
-  Tooltip,
-  Legend
-);
+import React, { useEffect, useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 
 const DashboardChart = () => {
-  // Sample data
-  const data = {
-    labels: ["January", "February", "March", "April", "May"], // X-Axis labels
-    datasets: [
-      {
-        type: "bar", // Bar chart for Water Quality Tests
-        label: "Water Quality Tests",
-        data: [120, 150, 200, 180, 220], // Y-Axis data for tests
-        backgroundColor: "rgba(54, 162, 235, 0.6)", // Blue color for bars
-        borderColor: "rgba(54, 162, 235, 1)",
-        borderWidth: 1,
-        yAxisID: "y1", // Use the left Y-axis
-      },
-      {
-        type: "line", // Line chart for Revenue
-        label: "Revenue ($)",
-        data: [5000, 6200, 7500, 6800, 8000], // Y-Axis data for revenue
-        borderColor: "rgba(255, 99, 132, 1)", // Red color for the line
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        borderWidth: 2,
-        yAxisID: "y2", // Use the right Y-axis
-      },
-    ],
-  };
+  // State to store fetched data
+  const [appointments, setAppointments] = useState(0);
+  const [communityForms, setCommunityForms] = useState(0);
+  const [financialDocuments, setFinancialDocuments] = useState(0);
+  const [roles, setRoles] = useState(0);
+  const [products, setProducts] = useState(0);
+  const [employees, setEmployees] = useState(0);
+  const [users, setUsers] = useState(0);
 
-  // Chart options
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top", // Legend position
-      },
-      tooltip: {
-        enabled: true, // Enable tooltips
-      },
-    },
-    scales: {
-      y1: {
-        type: "linear",
-        display: true,
-        position: "left", // Left Y-axis for Water Quality Tests
-        title: {
-          display: true,
-          text: "Water Quality Tests",
-        },
-      },
-      y2: {
-        type: "linear",
-        display: true,
-        position: "right", // Right Y-axis for Revenue
-        title: {
-          display: true,
-          text: "Revenue ($)",
-        },
-        grid: {
-          drawOnChartArea: false, // Prevent grid lines for the right Y-axis
-        },
-      },
-      x: {
-        title: {
-          display: true,
-          text: "Months",
-        },
-      },
-    },
-  };
+  // Fetch data from the backend
+  useEffect(() => {
+    // Fetch number of appointments
+    fetch('http://localhost:8070/api/services/')
+      .then((response) => response.json())
+      .then((data) => setAppointments(data.length))
+      .catch((error) => console.error('Error fetching appointments:', error));
+
+    // Fetch number of community forms
+    fetch('http://localhost:8070/commi/getAll')
+      .then((response) => response.json())
+      .then((data) => setCommunityForms(data.length))
+      .catch((error) => console.error('Error fetching community forms:', error));
+
+    // Fetch number of submitted financial documents
+    fetch('http://localhost:8070/Finance/')
+      .then((response) => response.json())
+      .then((data) => setFinancialDocuments(data.length))
+      .catch((error) => console.error('Error fetching financial documents:', error));
+
+    // Fetch number of current roles
+    fetch('http://localhost:8070/RoleAccess/')
+      .then((response) => response.json())
+      .then((data) => setRoles(data.length))
+      .catch((error) => console.error('Error fetching roles:', error));
+
+    // Fetch number of products in store
+    fetch('http://localhost:8070/products/getAllProducts')
+      .then((response) => response.json())
+      .then((data) => setProducts(data.length))
+      .catch((error) => console.error('Error fetching products:', error));
+
+    // Fetch number of employees
+    fetch('http://localhost:8070/Employee/employees')
+      .then((response) => response.json())
+      .then((data) => setEmployees(data.length))
+      .catch((error) => console.error('Error fetching employees:', error));
+
+    // Fetch number of users
+    fetch('http://localhost:8070/User/users')
+      .then((response) => response.json())
+      .then((data) => setUsers(data.length))
+      .catch((error) => console.error('Error fetching users:', error));
+  }, []);
+
+  // Data for Bar Chart
+  const barChartData = [
+    { name: 'Appointments', value: appointments },
+    { name: 'Community Forms', value: communityForms },
+    { name: 'Financial Docs', value: financialDocuments },
+    { name: 'Roles', value: roles },
+    { name: 'Products', value: products },
+    { name: 'Employees', value: employees },
+    { name: 'Users', value: users },
+  ];
+
+  // Data for Pie Chart
+  const pieChartData = [
+    { name: 'Appointments', value: appointments },
+    { name: 'Community Forms', value: communityForms },
+    { name: 'Financial Docs', value: financialDocuments },
+    { name: 'Roles', value: roles },
+    { name: 'Products', value: products },
+    { name: 'Employees', value: employees },
+    { name: 'Users', value: users },
+  ];
+
+  // Colors for Pie Chart
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919', '#19FFAF'];
 
   return (
-    <div style={{ width: "800px", margin: "0 auto" }}>
-      <h2>Monthly Sales and Water Quality Tests</h2>
-      <Bar data={data} options={options} />
+    <div className="p-8">
+      <h1 className="text-2xl font-bold text-blue-800 mb-6">Dashboard Overview</h1>
+
+      {/* Bar Chart */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Data Overview (Bar Chart)</h2>
+        <BarChart width={800} height={400} data={barChartData}>
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="value" fill="#8884d8" />
+        </BarChart>
+      </div>
+
+      {/* Pie Chart */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Data Distribution (Pie Chart)</h2>
+        <PieChart width={800} height={400}>
+          <Pie
+            data={pieChartData}
+            cx="50%"
+            cy="50%"
+            outerRadius={150}
+            fill="#8884d8"
+            dataKey="value"
+            label
+          >
+            {pieChartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+          <Legend />
+        </PieChart>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Data Summary (Table)</h2>
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left p-3 text-gray-700">Category</th>
+              <th className="text-left p-3 text-gray-700">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {barChartData.map((item, index) => (
+              <tr key={index} className="border-b hover:bg-gray-50 transition duration-200">
+                <td className="p-3 text-gray-800">{item.name}</td>
+                <td className="p-3 text-gray-800">{item.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

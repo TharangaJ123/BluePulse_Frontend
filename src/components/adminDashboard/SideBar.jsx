@@ -33,7 +33,7 @@ const Sidebar = ({ setActiveSection, activeSection }) => {
     { text: 'Community & Feedback', key: 'community-feedback', icon: <FaComments /> },
     { text: 'Role Access Management', key: 'roleAccess-management', icon: <FaShieldAlt /> },
     { text: 'Reports & Analytics', key: 'reports-analytics', icon: <FaChartBar /> },
-    { text: 'Settings', key: 'settings', icon: <FaCog /> },
+    { text: 'Contact Us Management', key: 'contact-forms', icon: <FaCog /> },
     { text: 'Help & Support', key: 'help-support', icon: <FaQuestionCircle /> },
   ];
 
@@ -85,3 +85,5 @@ const Sidebar = ({ setActiveSection, activeSection }) => {
 };
 
 export default Sidebar;
+
+

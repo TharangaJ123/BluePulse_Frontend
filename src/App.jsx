@@ -20,6 +20,7 @@ import CommunitySection from "./components/CommunitySection";
 import CommunityPost from "./components/CommunityPost";
 import FeedbackForm from "./components/FeedbackForm";
 import AdminSignIn from "./components/adminDashboard/AdminLogin";
+import EmployeeProfile from "./components/adminDashboard/EmployeeProfile";
  
 function App() {
   return (
@@ -55,6 +56,7 @@ function App() {
           <Route path="/SingleCommunity/:id" element={<CommunityPost/>} />
           <Route path="/FeedbackForm" element={<FeedbackForm/>} />
           <Route path="/AdminLogin" element={<AdminSignIn/>} />
+          <Route path="/AdminProfile/:id" element={<EmployeeProfile/>} />
         </Routes>
       </Router>
     </>

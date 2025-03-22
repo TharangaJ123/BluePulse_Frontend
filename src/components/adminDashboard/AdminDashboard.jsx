@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Import useNavigate
 import Sidebar from './SideBar';
 import MainContent from './MainContent';
 import UserManagement from './Sections/UserManagement';
@@ -15,21 +15,22 @@ import EmployeeManagement from './Sections/EmployeeManagement';
 import RoleAccessManagement from './Sections/RoleAccesManagement';
 import EmployeeTaskManagement from './Sections/EmployeeTaskManagement';
 import SuppliersManagement from './Sections/SuppliersManagement';
+import ContactForms from './Sections/ContactForms';
 
 function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');
-  const [employeeName, setEmployeeName] = useState(''); // State to store employee name
-  const { employeeId } = useParams(); // Extract employee ID from the URL
+  const [employeeName, setEmployeeName] = useState('');
+  const { employeeId } = useParams();
+  const navigate = useNavigate(); // Initialize useNavigate
 
-  // Fetch employee details when the component mounts
   useEffect(() => {
     const fetchEmployeeDetails = async () => {
       try {
         const response = await fetch(`http://localhost:8070/Employee/employees/${employeeId}`);
         if (response.ok) {
           const data = await response.json();
-          setEmployeeName(data.full_name); // Set the employee name
-          console.log("Employee Name:", data.full_name); // Log the employee name
+          setEmployeeName(data.full_name);
+          console.log("Employee Name:", data.full_name);
         } else {
           console.error("Failed to fetch employee details");
         }
@@ -39,7 +40,12 @@ function AdminDashboard() {
     };
 
     fetchEmployeeDetails();
-  }, [employeeId]); // Re-run effect when employeeId changes
+  }, [employeeId]);
+
+  // Function to handle click on the welcome message
+  const handleProfileClick = () => {
+    navigate(`/AdminProfile/${employeeId}`); // Navigate to the profile page
+  };
 
   const renderSection = () => {
     switch (activeSection) {
@@ -71,6 +77,8 @@ function AdminDashboard() {
         return <RoleAccessManagement />;
       case 'employee-task-management':
         return <EmployeeTaskManagement />;
+      case 'contact-forms':
+        return <ContactForms />;
       default:
         return <MainContent />;
     }
@@ -78,27 +86,21 @@ function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar setActiveSection={setActiveSection} />
-
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
         <header className="bg-white shadow-sm p-4">
           <div className="container mx-auto flex justify-between items-center">
-            {/* Dashboard Title */}
             <h1 className="text-xl font-semibold text-blue-800">Admin Dashboard</h1>
-
-            {/* User Profile */}
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
+              <span
+                className="text-gray-700 cursor-pointer hover:text-blue-800"
+                onClick={handleProfileClick} // Add onClick handler
+              >
                 Welcome, <span className="font-semibold text-blue-800">{employeeName}</span>
               </span>
             </div>
           </div>
         </header>
-
-        {/* Main Content */}
         {renderSection()}
       </div>
     </div>

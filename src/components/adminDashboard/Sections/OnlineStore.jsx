@@ -26,8 +26,22 @@ const InventoryManagement = () => {
     supplier: "",
   });
   const [quantities, setQuantities] = useState({}); // State to manage quantities for each product
-  const [productToUpdate, setProductToUpdate] = useState(null); // State to store the product being updated
   const [suppliers, setSuppliers] = useState([]); // State to store supplier IDs
+  const [validationErrors, setValidationErrors] = useState({}); // State to track validation errors
+  const [showUpdateProductForm, setShowUpdateProductForm] = useState(false); // State to control update form visibility
+  const [productToUpdate, setProductToUpdate] = useState({
+    _id: "",
+    name: "",
+    price: "",
+    description: "",
+    image: null,
+    category: "",
+    quantity: "",
+    supplier: "",
+  });
+
+  // Define categories for the dropdown
+  const categories = ["Test Kits", "Spare Parts", "Purification Items"];
 
   // Fetch product data from the backend
   useEffect(() => {
@@ -37,9 +51,7 @@ const InventoryManagement = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:8070/products/getAllProducts"
-      );
+      const response = await fetch("http://localhost:8070/products/getAllProducts");
       if (!response.ok) {
         throw new Error("Failed to fetch products");
       }
@@ -100,12 +112,12 @@ const InventoryManagement = () => {
 
         // Define table headers and data
         const headers = [
-          "product name",
-          "price",
-          "description",
-          "category",
-          "quantity",
-          "supplier",
+          "Product Name",
+          "Price",
+          "Description",
+          "Category",
+          "Quantity",
+          "Supplier",
         ];
         const data = products.map((product) => [
           product.name,
@@ -134,24 +146,55 @@ const InventoryManagement = () => {
     }
   };
 
+  // Function to handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewProduct((prevProduct) => ({
+      ...prevProduct,
+      [name]: value,
+    }));
+    // Clear validation error for the field being updated
+    setValidationErrors({ ...validationErrors, [name]: "" });
+  };
+
+  // Function to handle image changes
   const handleImageChange = (e) => {
     setNewProduct({ ...newProduct, image: e.target.files[0] });
   };
 
-  // Function to handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewProduct({ ...newProduct, [name]: value });
-  };
+  // Function to validate form fields
+  const validateForm = () => {
+    const errors = {};
 
-  const updateProduct = (product) => {
-    setProductToUpdate(product); // Set the product to update
-    setShowAddProductForm(true); // Show the form
+    if (!newProduct.name.trim()) {
+      errors.name = "Product name is required";
+    }
+    if (!newProduct.price || isNaN(newProduct.price) || newProduct.price <= 0) {
+      errors.price = "Price must be a valid positive number";
+    }
+    if (!newProduct.category) {
+      errors.category = "Category is required";
+    }
+    if (!newProduct.quantity || isNaN(newProduct.quantity) || newProduct.quantity < 0) {
+      errors.quantity = "Quantity must be a valid non-negative number";
+    }
+    if (!newProduct.supplier) {
+      errors.supplier = "Supplier is required";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0; // Return true if no errors
   };
 
   // Function to handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate form fields
+    if (!validateForm()) {
+      return; // Stop submission if validation fails
+    }
+
     const formData = new FormData();
     formData.append("name", newProduct.name);
     formData.append("price", newProduct.price);
@@ -159,69 +202,42 @@ const InventoryManagement = () => {
     formData.append("category", newProduct.category);
     formData.append("quantity", newProduct.quantity);
     formData.append("supplier", newProduct.supplier);
-    if (newProduct.image) {
+
+    // Append the image only if a new image is selected
+    if (newProduct.image instanceof File) {
       formData.append("image", newProduct.image);
     }
 
+    // Debugging: Log FormData
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+
     try {
-      let response;
-      if (productToUpdate) {
-        // Update existing product
-        response = await fetch(
-          `http://localhost:8070/products/updateProduct/${productToUpdate._id}`,
-          {
-            method: "PUT",
-            body: formData,
-          }
-        );
-      } else {
-        // Add new product
-        response = await fetch(
-          "http://localhost:8070/products/addProduct",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-      }
+      let response = await fetch("http://localhost:8070/products/addProduct", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
-        throw new Error(productToUpdate ? "Failed to update product" : "Failed to add product");
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const data = await response.json();
-      if (productToUpdate) {
-        // Update the product in the list
-        setProducts(products.map((p) => (p._id === productToUpdate._id ? data : p)));
-        setProductToUpdate(null); // Clear the product to update
-        window.location.href = "#";
-      } else {
-        // Add the new product to the list
-        setProducts([...products, data]);
-        window.location.href = "#";
-      }
-      setShowAddProductForm(false); // Hide the form after submission
-      setNewProduct({
-        name: "",
-        price: "",
-        description: "",
-        image: null,
-        category: "",
-        quantity: "",
-        supplier: "",
-      });
+      console.log("Response Data:", data); // Debugging
+
     } catch (error) {
-      setError(error.message);
+      console.error("Error submitting form:", error);
     }
   };
 
-  //delete data from DB
+  // Function to delete a product
   const deleteProduct = (id, name) => {
     axios
       .delete(`http://localhost:8070/products/deleteProduct/${id}`)
       .then((res) => {
         console.log(res.data); // Optional: log server response
-        alert(`product Deleted : ${name}`);
+        alert(`Product Deleted: ${name}`);
         window.location.href = "#";
       })
       .catch((err) => {
@@ -253,6 +269,64 @@ const InventoryManagement = () => {
     } catch (error) {
       console.error("Error checking quantity:", error);
       alert("Failed to check quantity.");
+    }
+  };
+
+  // Function to handle update button click
+  const handleUpdateClick = (product) => {
+    setProductToUpdate({
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      description: product.description,
+      image: product.imageUrl,
+      category: product.category,
+      quantity: product.quantity,
+      supplier: product.supplier,
+    });
+    setShowUpdateProductForm(true);
+  };
+
+  // Function to handle update form submission
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate form fields
+    if (!validateForm()) {
+      return; // Stop submission if validation fails
+    }
+
+    const formData = new FormData();
+    formData.append("name", productToUpdate.name);
+    formData.append("price", productToUpdate.price);
+    formData.append("description", productToUpdate.description);
+    formData.append("category", productToUpdate.category);
+    formData.append("quantity", productToUpdate.quantity);
+    formData.append("supplier", productToUpdate.supplier);
+
+    // Append the image only if a new image is selected
+    if (productToUpdate.image instanceof File) {
+      formData.append("image", productToUpdate.image);
+    }
+
+    try {
+      let response = await fetch(`http://localhost:8070/products/updateProduct/${productToUpdate._id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Response Data:", data); // Debugging
+
+      // Refresh the product list
+      fetchProducts();
+      setShowUpdateProductForm(false); // Hide the update form
+    } catch (error) {
+      console.error("Error updating product:", error);
     }
   };
 
@@ -324,7 +398,9 @@ const InventoryManagement = () => {
       {/* Add Product Button */}
       <div className="mb-6">
         <button
-          onClick={() => setShowAddProductForm(!showAddProductForm)}
+          onClick={() => {
+            setShowAddProductForm(!showAddProductForm);
+          }}
           className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300 flex items-center"
         >
           <FaPlus className="mr-2" />{" "}
@@ -336,7 +412,7 @@ const InventoryManagement = () => {
       {showAddProductForm && (
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6 w-200">
           <h2 className="text-xl font-bold mb-4">
-            {productToUpdate ? "Update Product" : "Add New Product"}
+            Add New Product
           </h2>
           <form method="post" onSubmit={handleSubmit}>
             <div className="mb-4">
@@ -344,57 +420,78 @@ const InventoryManagement = () => {
               <input
                 type="text"
                 name="name"
-                value={productToUpdate ? productToUpdate.name : newProduct.name}
+                value={newProduct.name}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
-                required
               />
+              {validationErrors.name && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
+              )}
             </div>
             <div className="mb-4">
               <label className="block text-gray-700">Price</label>
               <input
                 type="number"
                 name="price"
-                value={productToUpdate ? productToUpdate.price : newProduct.price}
+                value={newProduct.price}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
-                required
               />
+              {validationErrors.price && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.price}</p>
+              )}
             </div>
             <div className="mb-4">
               <label className="block text-gray-700">Description</label>
               <input
                 type="text"
                 name="description"
-                value={productToUpdate ? productToUpdate.description : newProduct.description}
+                value={newProduct.description}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
               />
             </div>
             <div className="mb-4">
               <label className="block text-gray-700">Category</label>
-              <input
-                type="text"
+              <select
                 name="category"
-                value={productToUpdate ? productToUpdate.category : newProduct.category}
+                value={newProduct.category}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
-                required
-              />
+              >
+                <option value="">Select Category</option>
+                {categories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+              {validationErrors.category && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.category}</p>
+              )}
             </div>
             <div className="mb-4">
               <label className="block text-gray-700">Quantity</label>
               <input
                 type="number"
                 name="quantity"
-                value={productToUpdate ? productToUpdate.quantity : newProduct.quantity}
+                value={newProduct.quantity}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
-                required
               />
+              {validationErrors.quantity && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.quantity}</p>
+              )}
             </div>
             <div className="mb-4">
               <label className="block text-gray-700">Image</label>
+              {newProduct.image && typeof newProduct.image === "string" ? (
+                <img
+                  src={`http://localhost:8070${newProduct.image}`}
+                  alt="Product"
+                  className="w-20 h-20 mb-2"
+                />
+              ) : null}
               <input
                 type="file"
                 name="image"
@@ -406,10 +503,9 @@ const InventoryManagement = () => {
               <label className="block text-gray-700">Supplier ID</label>
               <select
                 name="supplier"
-                value={productToUpdate ? productToUpdate.supplier : newProduct.supplier}
+                value={newProduct.supplier}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
-                required
               >
                 <option value="">Select Supplier</option>
                 {suppliers.map((supplier) => (
@@ -418,13 +514,136 @@ const InventoryManagement = () => {
                   </option>
                 ))}
               </select>
+              {validationErrors.supplier && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.supplier}</p>
+              )}
             </div>
             <div className="flex justify-end">
               <button
                 type="submit"
                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300"
               >
-                {productToUpdate ? "Update Product" : "Add Product"}
+                Add Product
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Update Product Form */}
+      {showUpdateProductForm && (
+        <div className="bg-white p-6 rounded-lg shadow-lg mb-6 w-200">
+          <h2 className="text-xl font-bold mb-4">Update Product</h2>
+          <form method="post" onSubmit={handleUpdateSubmit}>
+            <div className="mb-4">
+              <label className="block text-gray-700">Product Name</label>
+              <input
+                type="text"
+                name="name"
+                value={productToUpdate.name}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              />
+              {validationErrors.name && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Price</label>
+              <input
+                type="number"
+                name="price"
+                value={productToUpdate.price}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              />
+              {validationErrors.price && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.price}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Description</label>
+              <input
+                type="text"
+                name="description"
+                value={productToUpdate.description}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Category</label>
+              <select
+                name="category"
+                value={productToUpdate.category}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select Category</option>
+                {categories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+              {validationErrors.category && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.category}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Quantity</label>
+              <input
+                type="number"
+                name="quantity"
+                value={productToUpdate.quantity}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              />
+              {validationErrors.quantity && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.quantity}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Image</label>
+              {productToUpdate.image && typeof productToUpdate.image === "string" ? (
+                <img
+                  src={`http://localhost:8070${productToUpdate.image}`}
+                  alt="Product"
+                  className="w-20 h-20 mb-2"
+                />
+              ) : null}
+              <input
+                type="file"
+                name="image"
+                onChange={handleImageChange}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Supplier ID</label>
+              <select
+                name="supplier"
+                value={productToUpdate.supplier}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select Supplier</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier._id} value={supplier._id}>
+                    {supplier.name} ({supplier._id})
+                  </option>
+                ))}
+              </select>
+              {validationErrors.supplier && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.supplier}</p>
+              )}
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300"
+              >
+                Update Product
               </button>
             </div>
           </form>
@@ -520,7 +739,7 @@ const InventoryManagement = () => {
                   </button>
 
                   <button
-                    onClick={() => updateProduct(product)}
+                    onClick={() => handleUpdateClick(product)}
                     className="ml-2 text-white px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-700"
                   >
                     Update

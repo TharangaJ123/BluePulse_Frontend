@@ -39,8 +39,12 @@ const SignIn = () => {
         const data = await response.json();
         console.log("Login successful:", data);
 
-        // Extract userID from the response
-        const userID = data._id; // Ensure the backend sends `userID` in the response
+        // Extract userID from the correct location in the response
+        const userID = data.user._id; // Access user ID from the nested user object
+        console.log("User ID:", userID);
+
+        // Store the token in localStorage
+        localStorage.setItem('token', data.token);
 
         // Redirect to UserProfile page with userID as a parameter
         navigate(`/UserProfile/${userID}`);

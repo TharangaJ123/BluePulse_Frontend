@@ -20,66 +20,83 @@ export default function ProfileSettings() {
     created_at: "",
     updated_at: "",
     __v: 0,
-    profile_image: "", // Add profile_image field
+    profile_image: "",
   });
 
-  const [activeSection, setActiveSection] = useState("profile"); // Track active section
-  const [selectedDate, setSelectedDate] = useState(null); // Track selected date for filtering
-  const [error, setError] = useState(""); // Track errors
-  const [loading, setLoading] = useState(true); // Track loading state
-  const [selectedImage, setSelectedImage] = useState(null); // Track selected image for upload
+  const [activeSection, setActiveSection] = useState("profile");
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  // Sample data for sidebar sections
-  const sampleData = {
-    onlinePurchases: [
-      { id: 1, item: "Laptop", date: "2023-10-01", amount: "$1200" },
-      { id: 2, item: "Headphones", date: "2023-09-25", amount: "$150" },
-    ],
-    communityFeedback: [
-      { id: 1, feedback: "Great community support!", date: "2023-10-05" },
-      { id: 2, feedback: "Need more events.", date: "2023-09-30" },
-    ],
-    appointments: [
-      { id: 1, type: "Doctor", date: "2023-10-10", time: "10:00 AM" },
-      { id: 2, type: "Dentist", date: "2023-10-15", time: "2:00 PM" },
-    ],
-    financial: [
-      { id: 1, transaction: "Salary", date: "2023-10-01", amount: "$5000" },
-      { id: 2, transaction: "Rent", date: "2023-10-05", amount: "$1200" },
-    ],
-  };
+  // State for user data
+  const [userData, setUserData] = useState({
+    purchases: [],
+    uploads: [],
+    communityPosts: [],
+    feeds: []
+  });
 
-  // Fetch user details when the component mounts or userId changes
+  // Fetch user details and data when the component mounts or userId changes
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:8070/User/users/${id}`);
-        if (!response.ok) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        // Fetch user profile
+        const profileResponse = await fetch(`http://localhost:8070/User/users/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!profileResponse.ok) {
           throw new Error("Failed to fetch user details");
         }
-        const data = await response.json();
-        // Update formData with fetched data
+        
+        const profileData = await profileResponse.json();
         setFormData({
-          _id: data._id,
-          full_name: data.full_name,
-          email: data.email,
-          phone_number: data.phone_number,
-          status: data.status,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          __v: data.__v,
-          profile_image: data.profile_image || "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg", // Default image if none provided
+          _id: profileData._id,
+          full_name: profileData.full_name,
+          email: profileData.email,
+          phone_number: profileData.phone_number,
+          status: profileData.status,
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at,
+          __v: profileData.__v,
+          profile_image: profileData.profile_image || "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg",
         });
 
-        // Display alert if account is not active
-        if (data.status !== "active") {
+        // Fetch user data (purchases, uploads, etc.)
+        const userDataResponse = await fetch(`http://localhost:8070/User/user-data/${profileData.email}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!userDataResponse.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+
+        const userData = await userDataResponse.json();
+        setUserData({
+          purchases: userData.purchases || [],
+          uploads: userData.uploads || [],
+          communityPosts: userData.communityPosts || [],
+          feeds: userData.feeds || []
+        });
+
+        if (profileData.status !== "active") {
           alert("This account is not on active mode or has been deleted by the owner.");
         }
       } catch (error) {
         console.error("Error fetching user details:", error);
         setError("Failed to load user details. Please try again.");
       } finally {
-        setLoading(false); // Set loading to false after the request completes
+        setLoading(false);
       }
     };
 
@@ -194,15 +211,36 @@ export default function ProfileSettings() {
 
   // Filter activities based on the selected date
   const filterActivities = (activities) => {
-    if (!selectedDate) return activities; // Return all activities if no date is selected
+    if (!selectedDate || !activities) return activities || [];
     const selectedDateString = selectedDate.toISOString().split('T')[0];
-    return activities.filter((activity) => activity.date === selectedDateString);
+    return activities.filter((activity) => {
+      const activityDate = new Date(activity.createdAt).toISOString().split('T')[0];
+      return activityDate === selectedDateString;
+    });
   };
 
   // Handle report download as PDF
   const handleDownloadReport = () => {
-    const filteredData = filterActivities(sampleData[activeSection]);
-    if (filteredData.length === 0) {
+    let dataToDownload = [];
+    
+    switch (activeSection) {
+      case 'onlinePurchases':
+        dataToDownload = filterActivities(userData.purchases);
+        break;
+      case 'communityFeedback':
+        dataToDownload = filterActivities(userData.communityPosts);
+        break;
+      case 'appointments':
+        dataToDownload = filterActivities(userData.uploads);
+        break;
+      case 'financial':
+        dataToDownload = filterActivities(userData.feeds);
+        break;
+      default:
+        dataToDownload = [];
+    }
+
+    if (dataToDownload.length === 0) {
       alert("No data available for the selected date.");
       return;
     }
@@ -216,17 +254,52 @@ export default function ProfileSettings() {
 
     // Add the filtered data to the PDF
     doc.setFontSize(12);
-    let yPosition = 20; // Starting Y position for the content
-    filteredData.forEach((item, index) => {
-      Object.entries(item).forEach(([key, value]) => {
-        doc.text(`${key}: ${value}`, 10, yPosition);
-        yPosition += 10; // Move down for the next line
-      });
-      yPosition += 10; // Add extra space between items
+    let yPosition = 20;
+
+    dataToDownload.forEach((item, index) => {
+      const date = new Date(item.createdAt).toLocaleDateString();
+      
+      switch (activeSection) {
+        case 'onlinePurchases':
+          doc.text(`Purchase ID: ${item._id}`, 10, yPosition);
+          doc.text(`Product: ${item.product?.name || 'N/A'}`, 10, yPosition + 10);
+          doc.text(`Amount: $${item.totalPrice}`, 10, yPosition + 20);
+          doc.text(`Date: ${date}`, 10, yPosition + 30);
+          yPosition += 40;
+          break;
+          
+        case 'communityFeedback':
+          doc.text(`Post Title: ${item.title}`, 10, yPosition);
+          doc.text(`Category: ${item.category}`, 10, yPosition + 10);
+          doc.text(`Date: ${date}`, 10, yPosition + 20);
+          yPosition += 30;
+          break;
+          
+        case 'appointments':
+          doc.text(`Upload Title: ${item.title}`, 10, yPosition);
+          doc.text(`File Type: ${item.fileType}`, 10, yPosition + 10);
+          doc.text(`Date: ${date}`, 10, yPosition + 20);
+          yPosition += 30;
+          break;
+          
+        case 'financial':
+          doc.text(`Content Type: ${item.type}`, 10, yPosition);
+          doc.text(`Likes: ${item.likes?.length || 0}`, 10, yPosition + 10);
+          doc.text(`Comments: ${item.comments?.length || 0}`, 10, yPosition + 20);
+          doc.text(`Date: ${date}`, 10, yPosition + 30);
+          yPosition += 40;
+          break;
+      }
+
+      // Add a separator line if not the last item
+      if (index < dataToDownload.length - 1) {
+        doc.line(10, yPosition - 5, 200, yPosition - 5);
+      }
     });
 
-    // Save the PDF and trigger download
-    doc.save(`${activeSection}_report_${selectedDate.toISOString().split('T')[0]}.pdf`);
+    // Save the PDF with a dynamic name based on section and date
+    const dateStr = selectedDate ? selectedDate.toISOString().split('T')[0] : 'all';
+    doc.save(`${activeSection}_report_${dateStr}.pdf`);
   };
 
   // Render content based on the active section
@@ -304,11 +377,11 @@ export default function ProfileSettings() {
                 </button>
               </div>
             </div>
-            {filterActivities(sampleData.onlinePurchases).map((purchase) => (
-              <div key={purchase.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Item:</strong> {purchase.item}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {purchase.date}</p>
-                <p className="text-blue-700"><strong>Amount:</strong> {purchase.amount}</p>
+            {filterActivities(userData.purchases).map((purchase) => (
+              <div key={purchase._id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
+                <p className="text-blue-700"><strong>Item:</strong> {purchase.product?.name || 'N/A'}</p>
+                <p className="text-blue-700"><strong>Date:</strong> {new Date(purchase.createdAt).toLocaleDateString()}</p>
+                <p className="text-blue-700"><strong>Amount:</strong> ${purchase.totalPrice}</p>
               </div>
             ))}
           </div>
@@ -334,10 +407,11 @@ export default function ProfileSettings() {
                 </button>
               </div>
             </div>
-            {filterActivities(sampleData.communityFeedback).map((feedback) => (
-              <div key={feedback.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Feedback:</strong> {feedback.feedback}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {feedback.date}</p>
+            {filterActivities(userData.communityPosts).map((post) => (
+              <div key={post._id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
+                <p className="text-blue-700"><strong>Post Title:</strong> {post.title}</p>
+                <p className="text-blue-700"><strong>Category:</strong> {post.category}</p>
+                <p className="text-blue-700"><strong>Date:</strong> {new Date(post.createdAt).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
@@ -363,11 +437,11 @@ export default function ProfileSettings() {
                 </button>
               </div>
             </div>
-            {filterActivities(sampleData.appointments).map((appointment) => (
-              <div key={appointment.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Type:</strong> {appointment.type}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {appointment.date}</p>
-                <p className="text-blue-700"><strong>Time:</strong> {appointment.time}</p>
+            {filterActivities(userData.uploads).map((upload) => (
+              <div key={upload._id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
+                <p className="text-blue-700"><strong>Upload Title:</strong> {upload.title}</p>
+                <p className="text-blue-700"><strong>File Type:</strong> {upload.fileType}</p>
+                <p className="text-blue-700"><strong>Date:</strong> {new Date(upload.createdAt).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
@@ -393,11 +467,12 @@ export default function ProfileSettings() {
                 </button>
               </div>
             </div>
-            {filterActivities(sampleData.financial).map((transaction) => (
-              <div key={transaction.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Transaction:</strong> {transaction.transaction}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {transaction.date}</p>
-                <p className="text-blue-700"><strong>Amount:</strong> {transaction.amount}</p>
+            {filterActivities(userData.feeds).map((feed) => (
+              <div key={feed._id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
+                <p className="text-blue-700"><strong>Content Type:</strong> {feed.type}</p>
+                <p className="text-blue-700"><strong>Likes:</strong> {feed.likes?.length || 0}</p>
+                <p className="text-blue-700"><strong>Comments:</strong> {feed.comments?.length || 0}</p>
+                <p className="text-blue-700"><strong>Date:</strong> {new Date(feed.createdAt).toLocaleDateString()}</p>
               </div>
             ))}
           </div>

@@ -199,7 +199,10 @@ const ServiceRequest = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8070/api/services/', {
+      // Simulate API request delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const response = await fetch('http://localhost:5003/api/services/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -266,7 +269,6 @@ const ServiceRequest = () => {
   const today = new Date().toISOString().split('T')[0];
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
@@ -316,19 +318,6 @@ const ServiceRequest = () => {
                   </div>
                 </div>
               </div>
-=======
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-  
-      <NavigationBar/>
-      {/* Main Content */}
-      <main className="flex-grow container mx-auto px-6 py-8">
-        <div className="bg-white p-8 max-w-4xl mx-auto">
-          <h2 className="text-3xl font-semibold text-blue-600 text-center mb-6">Request Our Services</h2>
-
-          {submissionStatus && (
-            <div className={`mb-6 p-4 rounded-lg ${submissionStatus === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {submissionStatus === 'success' ? 'Form submitted successfully!' : submissionStatus}
->>>>>>> 905712e0bf653e3bd0dac9000a691caa0ced254a
             </div>
           )}
 
@@ -524,7 +513,6 @@ const ServiceRequest = () => {
                 )}
               </div>
 
-<<<<<<< HEAD
               {/* Admin Link */}
               <div className="mt-6 text-center">
                 <Link to="/ServiceRequest/ServiceReqAdmin" className="text-blue-600 hover:text-blue-800 text-sm">
@@ -562,20 +550,6 @@ const ServiceRequest = () => {
           )}
         </div>
       </main>
-=======
-            <button
-              type="submit"
-              className={`w-full bg-blue-600 text-white py-3 rounded-lg ${isSubmitting ? 'opacity-50' : 'hover:bg-blue-700'} transition duration-300`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Request'}
-            </button>
-          </form>
-        </div>
-      </main>
-      <Footer/>
-    
->>>>>>> 905712e0bf653e3bd0dac9000a691caa0ced254a
     </div>
   );
 };

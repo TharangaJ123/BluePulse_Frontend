@@ -1,0 +1,51 @@
+/* src/styles/styles.css */
+
+/* Import Tailwind styles */
+
+/* src/styles.css */
+/* styles.css */
+.bg-image {
+  background-image: url('/images/bgimage.jpg');;
+  background-size: cover;
+  background-position: center;
+}
+
+
+/* Example custom styles using Tailwind's utility classes */
+
+.form-container {
+    @apply max-w-xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10;
+  }
+  
+  .form-title {
+    @apply text-2xl font-semibold text-gray-700 text-center mb-6;
+  }
+  
+  .form-input {
+    @apply w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500;
+  }
+  
+  .form-button {
+    @apply px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-gray-600;
+  }
+  
+  .form-select {
+    @apply w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500;
+  }
+  
+  .form-textarea {
+    @apply w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500;
+  }
+  
+  .checkbox-label {
+    @apply flex items-center;
+  }
+  
+  .checkbox-input {
+    @apply mr-2;
+  }
+  

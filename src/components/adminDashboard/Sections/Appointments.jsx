@@ -37,7 +37,7 @@ const ServiceReqAdmin = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5003/api/services/');
+      const response = await fetch('http://localhost:8070/api/services/');
       if (!response.ok) throw new Error('Failed to fetch requests');
       const data = await response.json();
       setRequests(data);
@@ -59,7 +59,7 @@ const ServiceReqAdmin = () => {
   // Handle Save Edit
   const handleSaveEdit = async () => {
     try {
-      const response = await fetch(`http://localhost:5003/api/services/${selectedRequest._id}`, {
+      const response = await fetch(`http://localhost:8070/api/services/${selectedRequest._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedRequest),
@@ -82,7 +82,7 @@ const ServiceReqAdmin = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:5003/api/services/${requestToDelete._id}`, {
+      const response = await fetch(`http://localhost:8070/api/services/${requestToDelete._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete request');
@@ -101,7 +101,7 @@ const ServiceReqAdmin = () => {
       const requestToUpdate = requests.find(req => req._id === id);
       const updatedRequest = { ...requestToUpdate, status: newStatus };
       
-      const response = await fetch(`http://localhost:5003/api/services/${id}`, {
+      const response = await fetch(`http://localhost:8070/api/services/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedRequest),

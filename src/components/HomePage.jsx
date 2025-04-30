@@ -6,22 +6,24 @@ import HeroSection from './HeroSection';
 import Services from './Services';
 import HomeFeedbackFormSection from './HomeFeedbackFormSection';
 import WhySelectUsSection from './WhySelectUsSection';
+import GoToShopSection from './GoToShopSection';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen text-white">
-        {/* Navbar */}
-        <NavigationBar/>
+        <NavigationBar />
 
-        {/* Hero Section */}
-        <HeroSection/>
+        <HeroSection />
 
         <WhySelectUsSection/>
 
-        {/* Service section */}
         <Services/>
 
-        <HomeFeedbackFormSection/>
+        <div id='feedback-form'>
+          <HomeFeedbackFormSection/>
+        </div>
+
+        <GoToShopSection/>
 
         <Footer/>
     </div>

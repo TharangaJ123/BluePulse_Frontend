@@ -24,6 +24,9 @@ import OnlineStoreHome_TestKits from "./components/OnlineStoreHome_TestKits";
 import OnlineStoreHome_SpareParts from "./components/OnlineStoreHome_SpareParts";
 import OnlineStoreHome_PurificationItems from "./components/OnlineStoreHome_PurificationItems";
 import EmployeeProfile from "./components/adminDashboard/EmployeeProfile";
+import FAQSection from "./components/FAQ";
+import HomeFeedbackFormSection from "./components/HomeFeedbackFormSection";
+import ThankYouPage from "./components/ThankYouPage";
  
 function App() {
   return (
@@ -40,6 +43,8 @@ function App() {
 
           <Route path="/singleProduct/:id" element={<Product/>} />
           <Route path="/cart" element={<ShoppingCart/>} />
+          <Route path="/faqs" element={<FAQSection/>} />
+          <Route path="/thankyou" element={<ThankYouPage/>} />  
          
  
           {/* Route for UserProfile with dynamic `id` parameter */}
@@ -54,15 +59,21 @@ function App() {
           {/* Route for Login */}
           <Route path="/AdminDashboard/:employeeId" element={<AdminDashboard/>} />
 
+          
           <Route path='/WaterTesting' element={<Water/>} />
           <Route path='/ServiceRequest' element={<ServiceRequest/>} />
           <Route path='/WaterQuality' element={<WaterQuality />} />
           <Route path="/waterQuality/:waterType" element={<WaterQuality />} />
 
+          {/* Sasika */}
           <Route path="/waterResourceFinance" element={<WaterResourceFinanceForm/>} />
+
+          {/* Lahiru */}
           <Route path="/Community" element={<CommunitySection/>} />
           <Route path="/SingleCommunity/:id" element={<CommunityPost/>} />
           <Route path="/FeedbackForm" element={<FeedbackForm/>} />
+
+
           <Route path="/AdminLogin" element={<AdminSignIn/>} />
           <Route path="/AdminProfile/:id" element={<EmployeeProfile/>} />
         </Routes>

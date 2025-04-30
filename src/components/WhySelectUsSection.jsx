@@ -1,76 +1,118 @@
 import React from 'react';
 import { motion } from "framer-motion";
+import { 
+  CheckBadgeIcon, 
+  LightBulbIcon, 
+  UserGroupIcon, 
+  Cog6ToothIcon, 
+  ChartBarIcon,
+  ShieldCheckIcon 
+} from "@heroicons/react/24/solid";
+import { Link } from 'react-router-dom';
 
 const WhySelectUsSection = () => {
+  const features = [
+    {
+      icon: <LightBulbIcon className="h-6 w-6 text-blue-500" />,
+      title: "Innovative Technology",
+      description: "State-of-the-art water purification systems designed for maximum efficiency and sustainability."
+    },
+    {
+      icon: <UserGroupIcon className="h-6 w-6 text-blue-500" />,
+      title: "Expert Team",
+      description: "Certified professionals with decades of combined experience in water treatment solutions."
+    },
+    {
+      icon: <Cog6ToothIcon className="h-6 w-6 text-blue-500" />,
+      title: "Custom Solutions",
+      description: "Tailored systems to meet your specific residential, commercial, or industrial needs."
+    },
+    {
+      icon: <ShieldCheckIcon className="h-6 w-6 text-blue-500" />, // Replaced LeafIcon
+      title: "Eco-Friendly",
+      description: "Sustainable practices that reduce environmental impact while delivering pure water."
+    },
+    {
+      icon: <ChartBarIcon className="h-6 w-6 text-blue-500" />,
+      title: "Proven Results",
+      description: "Trusted by thousands of customers with verified water quality improvements."
+    }
+  ];
+
   return (
-    <div className="mt-12 py-16 px-6 md:px-12 lg:px-24">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 justify-center">
-        {/* Image Section (Left Side) */}
-        <motion.div
-         initial={{opacity:0,x:-50}}
-         whileInView={{opacity:1,x:0}}
-         transition={{duration:0.8}}
-         className="w-7xl lg:w-1/2">
-          <img
-            src="../src/assets/FAO_Knowat22.jpg" // Replace with your image path
-            alt="Why Choose Us"
-            className="w-7xl h-140"
-          />
-        </motion.div>
-
-        {/* Text Section (Right Side) */}
-        <motion.div
-        initial={{opacity:0,x:+50}}
-        whileInView={{opacity:1,x:0}}
-        transition={{duration:0.8}}
-        className="w-full lg:w-1/2">
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-6">
-            Why Select Us?
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-blue-50" id='why-choose-us'>
+      <div className="max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Why Choose <span className="text-blue-600">BluePulse</span>
           </h2>
-
-          {/* List of Reasons */}
-          <ul className="space-y-4 text-gray-700">
-            <li className="flex items-start">
-              <span className="text-green-500 mr-3">✔</span>
-              <span className="flex-1">
-                <strong>Innovative Technology:</strong> State-of-the-art water purification systems designed for efficiency and sustainability.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-3">✔</span>
-              <span className="flex-1">
-                <strong>Expert Team:</strong> Certified professionals with decades of experience in water purification.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-3">✔</span>
-              <span className="flex-1">
-                <strong>Custom Solutions:</strong> Tailored systems to meet your specific needs, whether residential, commercial, or industrial.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-3">✔</span>
-              <span className="flex-1">
-                <strong>Eco-Friendly:</strong> Commitment to reducing environmental impact through sustainable practices.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-3">✔</span>
-              <span className="flex-1">
-                <strong>Proven Track Record:</strong> Trusted by thousands of satisfied customers worldwide.
-              </span>
-            </li>
-          </ul>
-
-          <div className="w-full flex justify-center">
-            <div className="justify-center flex flex-col align-middle text-center">
-              <button className="bg-blue-950 mt-10 p-3 rounded-2xl w-50 hover:bg-blue-700">Make a Reservation</button>
-            </div>
-          </div>
-
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Delivering exceptional water solutions through innovation, expertise, and commitment to quality.
+          </p>
         </motion.div>
+
+        <div className="flex flex-col lg:flex-row gap-12 xl:gap-16 items-center">
+          {/* Image Section */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="w-full lg:w-1/2 rounded-2xl overflow-hidden shadow-xl"
+          >
+            <img
+              src="../src/assets/FAO_Knowat22.jpg" // Replace with your image
+              alt="Water purification technology"
+              className="w-full h-auto object-cover rounded-2xl transform hover:scale-105 transition duration-700"
+            />
+          </motion.div>
+
+          {/* Features Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="w-full lg:w-1/2"
+          >
+            <div className="space-y-8">
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ y: -5 }}
+                  className="flex items-start p-5 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  <div className="flex-shrink-0 p-3 bg-blue-50 rounded-lg mr-5">
+                    {feature.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                    <p className="text-gray-600">{feature.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="mt-12 text-center"
+            >
+              <button className="relative inline-flex items-center justify-center px-8 py-4 overflow-hidden font-medium text-white bg-blue-600 rounded-full group hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <Link to="/ServiceRequest" className="relative z-10">Schedule a Consultation</Link>
+                <span className="absolute inset-0 bg-blue-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              </button>
+            </motion.div>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

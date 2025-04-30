@@ -1,10 +1,16 @@
 import React, { useState, useRef } from "react";
 import { FiUpload, FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
+import { FiShoppingCart } from "react-icons/fi";
 import Footer from "./Footer";
 import NavigationBar from "./NavigationBar";
+import { useLocation } from "react-router-dom";
 
 const WaterResourceFinanceForm = () => {
+
+  const location = useLocation();
+  const cartItems = location.state?.cartItems || [];
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -100,32 +106,63 @@ const WaterResourceFinanceForm = () => {
         formDataToSend.append("documentType", formData.documentType);
         formDataToSend.append("message", formData.message);
 
-        // Append each file to the FormData object
-        files.forEach((file) => {
-          formDataToSend.append("UploadDocuments", file); // Match the field name in the backend
-        });
+        // Append each file
+        if (files.length > 0) {
+          files.forEach((file) => {
+            formDataToSend.append("UploadDocuments", file);
+          });
+        }
 
-        // Send the form data to the backend
         const response = await fetch("http://localhost:8070/Finance/add", {
           method: "POST",
-          body: formDataToSend, // FormData is sent as the body
+          body: formDataToSend,
         });
 
+        const result = await response.json();
+        const transactionId = result._id || result.transactionId; // Assuming the response contains a transaction ID
+        const email = result.email || formData.email; // Assuming the response contains an email
+        console.log("Transaction ID:", transactionId);
+        console.log("Email:", email); // Debugging: Log the email
+        console.log("Response:", result); // Debugging: Log the response
+
         if (response.ok) {
-          const result = await response.json();
-          alert(result.message); // Show success message
-          handleReset(); // Reset the form
+          
+          alert(result.message);
+          handleReset();
+
+          // Send to order management  
+          
+          const orderResponse = await fetch("http://localhost:8070/orders/createOrder", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ transactionId, cartItems,email }),
+          });
+          console.log("Sending data:", cartItems);
+          
+
+          if (orderResponse.ok) {
+            const orderResult = await orderResponse.json();
+            console.log("Order is created successfully: " + JSON.stringify(orderResult))
+          } else {
+            throw new Error("Failed to create order in order management system");
+          }
+
         } else {
-          throw new Error("Failed to submit form");
+          const errorText = await response.text();
+          throw new Error(`Failed to submit form: ${errorText}`);
         }
+
       } catch (error) {
         console.error(error);
-        alert("An error occurred while submitting the form.");
+        alert("An error occurred: " + error.message);
       } finally {
         setIsSubmitting(false);
       }
     }
   };
+
 
   // Reset the form
   const handleReset = () => {
@@ -143,9 +180,84 @@ const WaterResourceFinanceForm = () => {
 
   return (
     <div>
-        <NavigationBar/>
+      <NavigationBar/>
       <div className="min-h-screen  to-green-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
+
+          {/* Cart Items Preview Section */}
+          {cartItems.length > 0 ? (
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+              <div className="bg-blue-600 px-6 py-4 flex items-center">
+                <FiShoppingCart className="text-white h-6 w-6 mr-2" />
+                <h2 className="text-xl font-bold text-white">
+                  {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''} in Your Payment
+                </h2>
+              </div>
+              
+              <div className="p-6">
+                <ul className="divide-y divide-gray-200">
+                  {cartItems.map((item, index) => (
+                    <li key={`${item.id || index}`} className="py-4 flex">
+                      <div className="flex-shrink-0 bg-blue-50 rounded-md p-3">
+                        <img
+                          className="h-16 w-16 object-contain"
+                          src={item.image || '/default-item.png'}
+                          alt={item.name || 'Cart item'}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/default-item.png';
+                          }}
+                        />
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="flex justify-between">
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {item.name || 'Unnamed Item'}
+                          </h3>
+                          <p className="ml-4 text-sm font-medium text-gray-900">
+                            LKR {item.price ? item.price.toFixed(2) : '0.00'}
+                          </p>
+                        </div>
+                        {item.description && (
+                          <p className="mt-1 text-sm text-gray-500 truncate">
+                            {item.description}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-gray-400">
+                          Qty: {item.quantity || 1}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="border-t border-gray-200 mt-4 pt-4">
+                  <div className="flex justify-between text-base font-medium text-gray-900">
+                    <p>Subtotal</p>
+                    <p>
+                      LKR {cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-8 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    No items found in your payment. Please ensure you've added items before proceeding.
+                  </p>
+                </div>
+              </div>
+            </div>  
+          )}
+
           <div className="bg-white rounded-xl p-6 sm:p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-blue-800 mb-2">
@@ -236,13 +348,7 @@ const WaterResourceFinanceForm = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Document Type</option>
-                    <option value="financial_report">Financial Report</option>
-                    <option value="budget_proposal">Budget Proposal</option>
-                    <option value="investment_plan">
-                      Water Resource Investment Plan
-                    </option>
-                    <option value="funding_request">Funding Request</option>
-                    <option value="other">Other</option>
+                    <option value="financial_report">Bank Slip</option>
                   </select>
                 </div>
               </div>

@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Services() {
   return (
-    <div className="w-full mt-10 mb-20">
+    <div className="w-full mt-10 mb-20" id="our-services">
       <div className="container mx-auto px-4 flex flex-col items-center">
         <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">
           Our Services

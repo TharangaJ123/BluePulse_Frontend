@@ -5,16 +5,16 @@ import { Link } from "react-router-dom";
 export default function NavigationBar() {
   return (
     <div>
-      <nav className="top-0 left-0 w-full p-4 bg-blue-900 shadow-lg flex justify-between items-center px-10">
+      <nav className="top-0 left-0 p-4 bg-blue-950/80 backdrop-brightness-10 shadow-lg flex justify-between items-center px-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <img
-            src="../src/assets/logo_white_landscape.png"
+            src="../src/assets/bplogo.png"
             alt="logo"
-            className="h-10"
+            className="h-15"
           />
         </motion.div>
         <ul className="flex space-x-6">

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import ModernFooter from "./Footer";
+import NavigationBar from "./NavigationBar";
 
 const ShoppingCart = () => {
   const [cartItems, setCartItems] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -63,7 +66,7 @@ const ShoppingCart = () => {
         localStorage.setItem("cart", JSON.stringify(filteredCart));
   
         alert("Checkout successful!");
-        window.location.href="/waterResourceFinance";
+        navigate('/waterResourceFinance',{state:{cartItems}});
       } catch (error) {
         console.error("Error updating product quantities:", error);
         alert("Error processing checkout. Please try again.");
@@ -71,7 +74,9 @@ const ShoppingCart = () => {
     };
 
   return (
-    <div className="h-screen w-full bg-gray-100 flex flex-col justify-center items-center">
+    <div>
+      <NavigationBar/>
+      <div className="h-screen w-full bg-gray-100 flex flex-col justify-center items-center">
       <div className="w-3xl mx-auto p-6 bg-white shadow-xl rounded-lg">
         <div className="w-full h-15 rounded-b-2xl bg-blue-950 flex items-center justify-center mb-6">
           <h2 className="text-2xl font-semibold text-amber-50">Shopping Cart</h2>
@@ -138,6 +143,8 @@ const ShoppingCart = () => {
           </>
         )}
       </div>
+    </div>
+    <ModernFooter/>
     </div>
   );
 };

@@ -35,7 +35,7 @@ export default function HomeFeedbackFormSection() {
   };
 
   return (
-    <div className="w-full bg-blue-950 py-20">
+    <div className="w-full bg-blue-950 py-20" id="feedback-form">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-stretch">
           {/* Left Side: Form */}
@@ -64,7 +64,7 @@ export default function HomeFeedbackFormSection() {
                   type="text"
                   id="name"
                   name="name"
-                  placeholder="John Doe"
+                  placeholder="Ex:Lasith Karunathilake"
                   className="mt-1 block w-full px-4 py-2 bg-transparent border-b-1 border-white text-white placeholder-gray-300 focus:outline-none focus:border-amber-500"
                   required
                 />
@@ -82,7 +82,7 @@ export default function HomeFeedbackFormSection() {
                   type="email"
                   id="email"
                   name="email"
-                  placeholder="johndoe@example.com"
+                  placeholder="lasith.k@example.com"
                   className="mt-1 block w-full px-4 py-2 bg-transparent border-b-1 border-white text-white placeholder-gray-300 focus:outline-none focus:border-amber-500"
                   required
                 />

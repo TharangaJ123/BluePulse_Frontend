@@ -24,6 +24,9 @@ import OnlineStoreHome_TestKits from "./components/OnlineStoreHome_TestKits";
 import OnlineStoreHome_SpareParts from "./components/OnlineStoreHome_SpareParts";
 import OnlineStoreHome_PurificationItems from "./components/OnlineStoreHome_PurificationItems";
 import EmployeeProfile from "./components/adminDashboard/EmployeeProfile";
+import FAQSection from "./components/FAQ";
+import HomeFeedbackFormSection from "./components/HomeFeedbackFormSection";
+import ThankYouPage from "./components/ThankYouPage";
  
 function App() {
   return (
@@ -40,6 +43,8 @@ function App() {
 
           <Route path="/singleProduct/:id" element={<Product/>} />
           <Route path="/cart" element={<ShoppingCart/>} />
+          <Route path="/faqs" element={<FAQSection/>} />
+          <Route path="/thankyou" element={<ThankYouPage/>} />  
          
  
           {/* Route for UserProfile with dynamic `id` parameter */}

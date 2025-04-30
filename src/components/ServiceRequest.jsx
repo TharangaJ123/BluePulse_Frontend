@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaRegCheckCircle, FaEnvelope, FaPhoneAlt, FaCalendarAlt, FaClock, FaNotesMedical, FaArrowRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import NavigationBar from './NavigationBar';
-import Footer from './Footer';
 
 // Custom hook for form handling
 const useForm = (initialState, validate) => {

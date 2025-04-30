@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaRegCheckCircle, FaEnvelope, FaPhoneAlt, FaCalendarAlt, FaClock, FaNotesMedical, FaArrowRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import ModernFooter from './Footer';
+import NavigationBar from './NavigationBar';
 
 // Custom hook for form handling
 const useForm = (initialState, validate) => {
@@ -55,6 +57,7 @@ const useForm = (initialState, validate) => {
 // Reusable Input Component
 const InputField = ({ name, label, type, value, placeholder, icon, error, onChange, onBlur, touched, options, required = true }) => {
   return (
+    <div>
     <div className="form-group mb-4">
       <label htmlFor={name} className="flex items-center text-gray-700 font-medium mb-2">
         {icon && <span className="text-blue-500 mr-2">{icon}</span>}
@@ -118,6 +121,7 @@ const InputField = ({ name, label, type, value, placeholder, icon, error, onChan
           {error}
         </div>
       )}
+    </div>
     </div>
   );
 };
@@ -200,7 +204,7 @@ const ServiceRequest = () => {
       // Simulate API request delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const response = await fetch('http://localhost:5003/api/services/', {
+      const response = await fetch('http://localhost:8070/api/services/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -267,7 +271,9 @@ const ServiceRequest = () => {
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div>
+      <NavigationBar/>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
           {/* Header with progress indicator */}
@@ -548,6 +554,8 @@ const ServiceRequest = () => {
           )}
         </div>
       </main>
+    </div>
+    <ModernFooter/>
     </div>
   );
 };

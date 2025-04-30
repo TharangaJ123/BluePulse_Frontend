@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ModernFooter from './Footer';
+import NavigationBar from './NavigationBar';
 
 const Water = ({ onNavigate }) => {
   const [activeCategory, setActiveCategory] = useState(null);
@@ -130,9 +132,11 @@ const Water = ({ onNavigate }) => {
   };
 
   return (
-    <section 
+    <div>
+      <NavigationBar/>
+      <section 
       ref={sectionRef}
-      className="py-24 bg-gradient-to-b from-blue-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden"
+      className="py-24  via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`max-w-3xl mx-auto mb-12 text-center transition-all duration-1000 transform ${isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
@@ -142,14 +146,14 @@ const Water = ({ onNavigate }) => {
             </span>
           </div>
           
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-blue-900 dark:text-blue-100 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-blue-950  tracking-tight">
             Explore <span className="text-blue-600 dark:text-blue-400 relative">
               Water
               <span className="absolute bottom-1 left-0 w-full h-1 bg-blue-400 dark:bg-blue-600 rounded opacity-50"></span>
             </span> Categories
           </h2>
           
-          <p className="text-lg text-blue-700 dark:text-blue-300 max-w-2xl mx-auto">
+          <p className="text-lg text-blue- max-w-2xl mx-auto">
             Discover the different water classifications and their critical roles in sustaining our ecosystem, industries, and daily life
           </p>
         </div>
@@ -245,6 +249,8 @@ const Water = ({ onNavigate }) => {
         </div>
       </div>
     </section>
+    <ModernFooter/>
+    </div>
   );
 };
 

@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import ModernFooter from './Footer';
+import NavigationBar from './NavigationBar';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -474,7 +476,9 @@ const WaterQuality = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-8 px-4">
+    <div>
+      <NavigationBar/>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-8 px-4">
       {/* Main container */}
       <div className="max-w-6xl mx-auto rounded-xl shadow-xl bg-white overflow-hidden" ref={reportRef}>
         {/* Header */}
@@ -790,6 +794,8 @@ const WaterQuality = () => {
           </div>
         )}
       </div>
+    </div>
+    <ModernFooter/>
     </div>
   );
 };

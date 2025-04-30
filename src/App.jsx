@@ -18,7 +18,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path='/' element={<Home />} />
-          <Route path='/WaterTesting' element={<WaterTesting />} />
+          <Route path='/WaterSelecting' element={<WaterTesting />} />
           <Route path='/ServiceRequest' element={<ServiceRequest />} />
           <Route path='/WaterQuality' element={<WaterQuality />} />
           <Route path="/waterQuality/:waterType" element={<WaterQuality />} />

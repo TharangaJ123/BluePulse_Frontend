@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
@@ -39,24 +40,34 @@ const SignIn = () => {
         const data = await response.json();
         console.log("Login successful:", data);
 
-        // Extract userID from the correct location in the response
-        const userID = data.user._id; // Access user ID from the nested user object
-        console.log("User ID:", userID);
+        if (!data.token) {
+          throw new Error('No token received from server');
+        }
 
-        // Store the token in localStorage
+        // Extract userID and verify token exists
+        const userID = data.user?._id;
+        if (!userID) {
+          throw new Error('No user ID received from server');
+        }
+
+        // Store the JWT token and user email in localStorage
         localStorage.setItem('token', data.token);
+        localStorage.setItem('userEmail', data.user.email);
+
+        // Set Authorization header for future requests
+        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
 
         // Redirect to UserProfile page with userID as a parameter
         navigate(`/UserProfile/${userID}`);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Login failed. Please check your credentials."); // Set error message
+        throw new Error(errorData.error || "Login failed. Please check your credentials.");
       }
     } catch (error) {
       console.error("Error during login:", error);
-      setError("An error occurred. Please try again."); // Set error message
+      setError(error.message || "An error occurred. Please try again.");
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 

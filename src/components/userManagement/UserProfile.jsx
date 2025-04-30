@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import React from 'react';
-import { FaCalendarAlt, FaDownload, FaTrash, FaUser, FaShoppingCart, FaComments, FaClock, FaMoneyBillAlt } from "react-icons/fa"; // Icons from react-icons
+import { FaCalendarAlt, FaDownload, FaTrash, FaUser, FaShoppingCart, FaComments, FaClock, FaMoneyBillAlt, FaEdit, FaBell, FaHome } from "react-icons/fa"; // Icons from react-icons
 import DatePicker from "react-datepicker"; // DatePicker component
 import "react-datepicker/dist/react-datepicker.css"; // DatePicker CSS
-import { useParams } from "react-router-dom"; // Import useParams
+import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
 import jsPDF from "jspdf"; // Import jsPDF for PDF generation
 
 export default function ProfileSettings() {
   const { id } = useParams();
+  const navigate = useNavigate(); // Add navigate hook
   console.log("User ID:", id);
 
   // Initialize formData with fields from the provided data
@@ -20,7 +21,7 @@ export default function ProfileSettings() {
     created_at: "",
     updated_at: "",
     __v: 0,
-    profile_image: "",
+    profile_image: "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg", // Set default image
   });
 
   const [activeSection, setActiveSection] = useState("profile");
@@ -34,7 +35,8 @@ export default function ProfileSettings() {
     purchases: [],
     uploads: [],
     communityPosts: [],
-    feeds: []
+    feeds: [],
+    appointments: [] // Add appointments to userData state
   });
 
   // Fetch user details and data when the component mounts or userId changes
@@ -58,7 +60,8 @@ export default function ProfileSettings() {
         }
         
         const profileData = await profileResponse.json();
-        setFormData({
+        setFormData(prev => ({
+          ...prev,
           _id: profileData._id,
           full_name: profileData.full_name,
           email: profileData.email,
@@ -67,8 +70,8 @@ export default function ProfileSettings() {
           created_at: profileData.created_at,
           updated_at: profileData.updated_at,
           __v: profileData.__v,
-          profile_image: profileData.profile_image || "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg",
-        });
+          profile_image: profileData.profile_image || prev.profile_image,
+        }));
 
         // Fetch user data (purchases, uploads, etc.)
         const userDataResponse = await fetch(`http://localhost:8070/User/user-data/${profileData.email}`, {
@@ -82,11 +85,61 @@ export default function ProfileSettings() {
         }
 
         const userData = await userDataResponse.json();
+
+        // Fetch community posts
+        let communityPosts = [];
+        try {
+          const communityResponse = await fetch('http://localhost:8070/commi/getAll', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (communityResponse.ok) {
+            const allPosts = await communityResponse.json();
+            // Filter posts by user's email
+            communityPosts = allPosts.filter(post => post.email === profileData.email);
+          }
+        } catch (error) {
+          console.warn("Could not fetch community posts:", error);
+        }
+
+        // Fetch all services and filter by email
+        let appointmentsData = [];
+        try {
+          // Try the new findByEmail endpoint first
+          const appointmentsResponse = await fetch(`http://localhost:8070/api/services/findByEmail/${profileData.email}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (appointmentsResponse.ok) {
+            appointmentsData = await appointmentsResponse.json();
+          } else {
+            // Fallback to fetching all services and filtering on frontend
+            const servicesResponse = await fetch('http://localhost:8070/services', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (servicesResponse.ok) {
+              const allServices = await servicesResponse.json();
+              // Filter services by user's email
+              appointmentsData = allServices.filter(service => service.email === profileData.email);
+            }
+          }
+        } catch (error) {
+          console.warn("Could not fetch services:", error);
+        }
+
         setUserData({
           purchases: userData.purchases || [],
           uploads: userData.uploads || [],
-          communityPosts: userData.communityPosts || [],
-          feeds: userData.feeds || []
+          communityPosts: communityPosts,
+          feeds: userData.feeds || [],
+          appointments: appointmentsData
         });
 
         if (profileData.status !== "active") {
@@ -231,7 +284,7 @@ export default function ProfileSettings() {
         dataToDownload = filterActivities(userData.communityPosts);
         break;
       case 'appointments':
-        dataToDownload = filterActivities(userData.uploads);
+        dataToDownload = filterActivities(userData.appointments);
         break;
       case 'financial':
         dataToDownload = filterActivities(userData.feeds);
@@ -276,10 +329,14 @@ export default function ProfileSettings() {
           break;
           
         case 'appointments':
-          doc.text(`Upload Title: ${item.title}`, 10, yPosition);
-          doc.text(`File Type: ${item.fileType}`, 10, yPosition + 10);
-          doc.text(`Date: ${date}`, 10, yPosition + 20);
-          yPosition += 30;
+          doc.text(`Service Type: ${item.service}`, 10, yPosition);
+          doc.text(`Full Name: ${item.fullName}`, 10, yPosition + 10);
+          doc.text(`Email: ${item.email}`, 10, yPosition + 20);
+          doc.text(`Phone: ${item.phone}`, 10, yPosition + 30);
+          doc.text(`Preferred Date: ${new Date(item.preferredDate).toLocaleDateString()}`, 10, yPosition + 40);
+          doc.text(`Preferred Time: ${item.preferredTime}`, 10, yPosition + 50);
+          doc.text(`Status: ${item.termsAccepted ? "Confirmed" : "Pending"}`, 10, yPosition + 60);
+          yPosition += 70;
           break;
           
         case 'financial':
@@ -409,41 +466,110 @@ export default function ProfileSettings() {
             </div>
             {filterActivities(userData.communityPosts).map((post) => (
               <div key={post._id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Post Title:</strong> {post.title}</p>
+                <p className="text-blue-700"><strong>Title:</strong> {post.title}</p>
+                <p className="text-blue-700"><strong>Content:</strong> {post.content}</p>
                 <p className="text-blue-700"><strong>Category:</strong> {post.category}</p>
                 <p className="text-blue-700"><strong>Date:</strong> {new Date(post.createdAt).toLocaleDateString()}</p>
+                {post.comments && post.comments.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-blue-700"><strong>Comments:</strong> {post.comments.length}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         );
       case "appointments":
         return (
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="text-xl font-semibold text-blue-800">Appointments</h4>
-              <div className="flex items-center gap-2">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h4 className="text-2xl font-semibold text-gray-800">Service Requests</h4>
+              <div className="flex items-center gap-3">
                 <DatePicker
                   selected={selectedDate}
                   onChange={(date) => setSelectedDate(date)}
                   dateFormat="MMMM d, yyyy"
-                  className="p-2 border border-blue-200 rounded-lg bg-blue-50 focus:bg-white focus:border-blue-500 transition duration-200"
+                  className="px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholderText="Select a date"
                 />
                 <button
-                  className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200 flex items-center gap-2"
+                  className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
                   onClick={handleDownloadReport}
                 >
                   <FaDownload /> Download Report
                 </button>
               </div>
             </div>
-            {filterActivities(userData.uploads).map((upload) => (
-              <div key={upload._id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Upload Title:</strong> {upload.title}</p>
-                <p className="text-blue-700"><strong>File Type:</strong> {upload.fileType}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {new Date(upload.createdAt).toLocaleDateString()}</p>
+
+            <div className="grid gap-6">
+              {filterActivities(userData.appointments).map((service) => (
+                <div 
+                  key={service._id} 
+                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100"
+                >
+                  <div className="p-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <FaClock className="text-blue-500" />
+                          <p className="text-gray-800">
+                            <span className="font-medium">Service Type:</span>{" "}
+                            <span className="text-blue-600">{service.service}</span>
+                          </p>
+                        </div>
+                        <p className="text-gray-700">
+                          <span className="font-medium">Full Name:</span> {service.fullName}
+                        </p>
+                        <p className="text-gray-700">
+                          <span className="font-medium">Email:</span> {service.email}
+                        </p>
+                      </div>
+                      <div className="space-y-3">
+                        <p className="text-gray-700">
+                          <span className="font-medium">Phone:</span> {service.phone}
+                        </p>
+                        <p className="text-gray-700">
+                          <span className="font-medium">Preferred Date:</span>{" "}
+                          {new Date(service.preferredDate).toLocaleDateString()}
+                        </p>
+                        <p className="text-gray-700">
+                          <span className="font-medium">Preferred Time:</span> {service.preferredTime}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex justify-between items-center">
+                        <p className="text-gray-700">
+                          <span className="font-medium">Status:</span>{" "}
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            service.termsAccepted 
+                              ? "bg-green-100 text-green-700" 
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                            {service.termsAccepted ? "Confirmed" : "Pending"}
+                          </span>
+                        </p>
+                        <button 
+                          className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                          onClick={() => {/* Add view details handler */}}
+                        >
+                          View Details →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {userData.appointments.length === 0 && (
+              <div className="text-center py-12">
+                <div className="bg-gray-50 rounded-lg p-8">
+                  <FaBell className="mx-auto text-4xl text-gray-400 mb-4" />
+                  <p className="text-gray-500 text-lg">No service requests found</p>
+                </div>
               </div>
-            ))}
+            )}
           </div>
         );
       case "financial":
@@ -485,11 +611,16 @@ export default function ProfileSettings() {
 
             {/* Profile Image Section */}
             <div className="flex flex-col items-center mb-5">
-              <img
-                className="rounded-full w-36 h-36 border-4 border-blue-200 mb-3"
-                src={selectedImage || formData.profile_image}
-                alt="Profile"
-              />
+              {formData.profile_image && (
+                <img
+                  className="rounded-full w-36 h-36 border-4 border-blue-200 mb-3"
+                  src={formData.profile_image}
+                  alt="Profile"
+                  onError={(e) => {
+                    e.target.src = "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg";
+                  }}
+                />
+              )}
               <input
                 type="file"
                 accept="image/*"
@@ -659,23 +790,20 @@ export default function ProfileSettings() {
             {/* Save Changes and Delete Account Buttons (only shown if account is active) */}
             {formData.status === "active" && (
               <>
-                {/* Save Changes and Delete Account Buttons (only shown if account is active) */}
-{formData.status === "active" && (
-  <div className="flex gap-4 mt-5"> {/* Add flex container with gap */}
-    <button
-      className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200"
-      onClick={handleSubmit}
-    >
-      Save Profile
-    </button>
-    <button
-      className="bg-gradient-to-r from-red-600 to-red-500 text-white py-2 px-4 rounded-lg hover:from-red-700 hover:to-red-600 transition duration-200 flex items-center gap-2"
-      onClick={handleDeleteAccount}
-    >
-      <FaTrash /> Delete Account
-    </button>
-  </div>
-)}
+                <div className="flex gap-4 mt-5"> {/* Add flex container with gap */}
+                  <button
+                    className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200"
+                    onClick={handleSubmit}
+                  >
+                    Save Profile
+                  </button>
+                  <button
+                    className="bg-gradient-to-r from-red-600 to-red-500 text-white py-2 px-4 rounded-lg hover:from-red-700 hover:to-red-600 transition duration-200 flex items-center gap-2"
+                    onClick={handleDeleteAccount}
+                  >
+                    <FaTrash /> Delete Account
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -684,48 +812,109 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="container mx-auto p-15 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg mt-5 mb-5">
-      {/* Title */}
-      <h1 className="text-3xl font-bold text-blue-800 text-center mb-5">Welcome to your User Profile </h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Profile Section */}
-        <div className="flex flex-col items-center p-5 border-r border-blue-200">
-          <img
-            className="rounded-full w-36 mt-5 border-4 border-blue-200"
-            src={formData.profile_image}
-            alt="Profile"
-          />
-          <span className="font-bold mt-3 text-blue-800">{formData.full_name}</span>
-          <span className="text-blue-600">{formData.email}</span>
-
-          {/* Additional Buttons */}
-          <div className="mt-4 flex flex-col gap-2 w-full">
-            {[
-              { label: "Profile Settings", section: "profile", icon: <FaUser /> },
-              { label: "Online Purchases", section: "onlinePurchases", icon: <FaShoppingCart /> },
-              { label: "Community & Feedback", section: "communityFeedback", icon: <FaComments /> },
-              { label: "Appointments", section: "appointments", icon: <FaClock /> },
-              { label: "Financial", section: "financial", icon: <FaMoneyBillAlt /> },
-            ].map((button) => (
-              <button
-                key={button.section}
-                className={`w-full py-2 px-4 rounded-lg flex items-center gap-2 ${
-                  activeSection === button.section
-                    ? "bg-gradient-to-r from-blue-700 to-blue-600 text-white"
-                    : "bg-blue-100 text-blue-700 hover:bg-blue-200 transition duration-200"
-                }`}
-                onClick={() => setActiveSection(button.section)}
-              >
-                {button.icon} {button.label}
-              </button>
-            ))}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 md:p-8">
+      {/* Main Container */}
+      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        {/* Header Section */}
+        <div className="relative h-48 bg-gradient-to-r from-blue-600 to-blue-400">
+          <div className="absolute inset-0 bg-black opacity-20"></div>
+          <div className="relative flex justify-between items-center px-8 pt-8">
+            <button
+              onClick={() => navigate('/')}
+              className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition duration-200 flex items-center gap-2 shadow-lg"
+            >
+              <FaHome /> Back to Home
+            </button>
+            <h1 className="text-3xl font-bold text-white">
+              Welcome to your User Profile
+            </h1>
+            <div className="w-32"></div> {/* Spacer to balance the layout */}
           </div>
         </div>
 
-        {/* Form Section */}
-        <div className="p-5 border-r border-blue-200 col-span-2">
-          {renderContent()}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+          {/* Left Sidebar - Profile Section */}
+          <div className="md:col-span-1">
+            <div className="bg-white rounded-2xl shadow-lg p-6 -mt-20 relative z-10">
+              <div className="flex flex-col items-center">
+                {formData.profile_image && (
+                  <div className="relative group">
+                    <img
+                      className="rounded-full w-32 h-32 border-4 border-white shadow-lg transition-transform duration-300 group-hover:scale-105"
+                      src={formData.profile_image}
+                      alt="Profile"
+                      onError={(e) => {
+                        e.target.src = "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg";
+                      }}
+                    />
+                    <label
+                      htmlFor="profileImageInput"
+                      className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full text-white cursor-pointer shadow-lg hover:bg-blue-600 transition-colors duration-200"
+                    >
+                      <FaEdit size={16} />
+                    </label>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="profileImageInput"
+                />
+                <h2 className="mt-4 text-xl font-semibold text-gray-800">{formData.full_name}</h2>
+                <p className="text-blue-600">{formData.email}</p>
+                
+                {/* Status Badge */}
+                <div className={`mt-3 px-4 py-1 rounded-full text-sm font-medium ${
+                  formData.status === "active" 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  {formData.status === "active" ? "Active" : "Inactive"}
+                </div>
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="mt-8 space-y-3">
+                {[
+                  { label: "Profile Settings", section: "profile", icon: <FaUser /> },
+                  { label: "Online Purchases", section: "onlinePurchases", icon: <FaShoppingCart /> },
+                  { label: "Community & Feedback", section: "communityFeedback", icon: <FaComments /> },
+                  { label: "Service Requests", section: "appointments", icon: <FaClock /> },
+                  { label: "Financial", section: "financial", icon: <FaMoneyBillAlt /> },
+                ].map((button) => (
+                  <button
+                    key={button.section}
+                    className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 transition-all duration-200 ${
+                      activeSection === button.section
+                        ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg transform scale-105"
+                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    }`}
+                    onClick={() => setActiveSection(button.section)}
+                  >
+                    <span className="text-lg">{button.icon}</span>
+                    <span className="font-medium">{button.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="md:col-span-2 bg-white rounded-2xl shadow-lg p-6">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              </div>
+            ) : error ? (
+              <div className="bg-red-50 text-red-700 p-4 rounded-lg">
+                {error}
+              </div>
+            ) : (
+              renderContent()
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -59,15 +59,21 @@ function App() {
           {/* Route for Login */}
           <Route path="/AdminDashboard/:employeeId" element={<AdminDashboard/>} />
 
+          
           <Route path='/WaterTesting' element={<Water/>} />
           <Route path='/ServiceRequest' element={<ServiceRequest/>} />
           <Route path='/WaterQuality' element={<WaterQuality />} />
           <Route path="/waterQuality/:waterType" element={<WaterQuality />} />
 
+          {/* Sasika */}
           <Route path="/waterResourceFinance" element={<WaterResourceFinanceForm/>} />
+
+          {/* Lahiru */}
           <Route path="/Community" element={<CommunitySection/>} />
           <Route path="/SingleCommunity/:id" element={<CommunityPost/>} />
           <Route path="/FeedbackForm" element={<FeedbackForm/>} />
+
+
           <Route path="/AdminLogin" element={<AdminSignIn/>} />
           <Route path="/AdminProfile/:id" element={<EmployeeProfile/>} />
         </Routes>

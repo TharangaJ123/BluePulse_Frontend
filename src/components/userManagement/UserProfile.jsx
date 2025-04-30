@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import React from 'react';
 import { FaCalendarAlt, FaDownload, FaTrash, FaUser, FaShoppingCart, FaComments, FaClock, FaMoneyBillAlt } from "react-icons/fa"; // Icons from react-icons
 import DatePicker from "react-datepicker"; // DatePicker component
@@ -28,6 +28,16 @@ export default function ProfileSettings() {
   const [error, setError] = useState(""); // Track errors
   const [loading, setLoading] = useState(true); // Track loading state
   const [selectedImage, setSelectedImage] = useState(null); // Track selected image for upload
+  
+  // Community posts states
+  const [communityPosts, setCommunityPosts] = useState([]);
+  const [communityLoading, setCommunityLoading] = useState(true);
+  const [sortOption, setSortOption] = useState('newest');
+
+  // Appointments states
+  const [appointments, setAppointments] = useState([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
+  const [appointmentSortOption, setAppointmentSortOption] = useState('newest');
 
   // Sample data for sidebar sections
   const sampleData = {
@@ -85,6 +95,101 @@ export default function ProfileSettings() {
 
     fetchUserDetails();
   }, [id]);
+
+  // Fetch community posts when email changes
+  useEffect(() => {
+    const fetchCommunityPosts = async () => {
+      if (!formData.email) return;
+      
+      try {
+        const response = await fetch(`http://localhost:8070/commi/getByEmail/${encodeURIComponent(formData.email)}`);
+        if (!response.ok) {
+          if (response.status === 404) {
+            setCommunityPosts([]);
+            return;
+          }
+          throw new Error("Failed to fetch community posts");
+        }
+        const data = await response.json();
+        setCommunityPosts(data);
+      } catch (error) {
+        console.error("Error fetching community posts:", error);
+        setCommunityPosts([]);
+      } finally {
+        setCommunityLoading(false);
+      }
+    };
+
+    fetchCommunityPosts();
+  }, [formData.email]);
+
+  // Fetch appointments when email changes
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!formData.email) return;
+      
+      try {
+        const response = await fetch(`http://localhost:8070/api/services/byEmail/${encodeURIComponent(formData.email)}`);
+        if (!response.ok) {
+          if (response.status === 404) {
+            setAppointments([]);
+            return;
+          }
+          throw new Error("Failed to fetch appointments");
+        }
+        const data = await response.json();
+        setAppointments(data);
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+        setAppointments([]);
+      } finally {
+        setAppointmentsLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, [formData.email]);
+
+  // Sort posts based on selected option
+  const sortedPosts = useMemo(() => {
+    return [...communityPosts].sort((a, b) => {
+      switch (sortOption) {
+        case 'newest':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'location':
+          return a.location.localeCompare(b.location);
+        default:
+          return 0;
+      }
+    });
+  }, [communityPosts, sortOption]);
+
+  // Sort appointments based on selected option
+  const sortedAppointments = useMemo(() => {
+    return [...appointments].sort((a, b) => {
+      switch (appointmentSortOption) {
+        case 'newest':
+          return new Date(b.preferredDate) - new Date(a.preferredDate);
+        case 'oldest':
+          return new Date(a.preferredDate) - new Date(b.preferredDate);
+        case 'service':
+          return a.service.localeCompare(b.service);
+        default:
+          return 0;
+      }
+    });
+  }, [appointments, appointmentSortOption]);
+
+  // Filter appointments based on selected date
+  const filteredAppointments = useMemo(() => {
+    if (!selectedDate) return sortedAppointments;
+    const selectedDateString = selectedDate.toISOString().split('T')[0];
+    return sortedAppointments.filter(appointment => 
+      new Date(appointment.preferredDate).toISOString().split('T')[0] === selectedDateString
+    );
+  }, [sortedAppointments, selectedDate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -319,6 +424,15 @@ export default function ProfileSettings() {
             <div className="flex justify-between items-center mb-3">
               <h4 className="text-xl font-semibold text-blue-800">Community & Feedback</h4>
               <div className="flex items-center gap-2">
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  className="p-2 border border-blue-200 rounded-lg bg-blue-50 focus:bg-white focus:border-blue-500 transition duration-200"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="location">Sort by Location</option>
+                </select>
                 <DatePicker
                   selected={selectedDate}
                   onChange={(date) => setSelectedDate(date)}
@@ -334,12 +448,51 @@ export default function ProfileSettings() {
                 </button>
               </div>
             </div>
-            {filterActivities(sampleData.communityFeedback).map((feedback) => (
-              <div key={feedback.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Feedback:</strong> {feedback.feedback}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {feedback.date}</p>
+
+            {communityLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading community posts...</p>
               </div>
-            ))}
+            ) : sortedPosts.length === 0 ? (
+              <div className="text-center py-4 text-gray-600">
+                No community posts found.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sortedPosts.map((post) => (
+                  <div key={post._id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+                    {post.photo && (
+                      <img
+                        src={`http://localhost:8070${post.photo}`}
+                        alt="Post"
+                        className="w-full h-48 object-cover rounded-lg mb-4"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://via.placeholder.com/400x300?text=No+Image+Available";
+                        }}
+                      />
+                    )}
+                    <div className="space-y-2">
+                      <p className="text-gray-800"><strong>Location:</strong> {post.location}</p>
+                      <p className="text-gray-800"><strong>Description:</strong> {post.description}</p>
+                      <p className="text-sm text-gray-500">Posted on: {new Date(post.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Display feedback section */}
+            <div className="mt-6">
+              <h5 className="text-lg font-semibold text-blue-800 mb-3">Your Feedback</h5>
+              {filterActivities(sampleData.communityFeedback).map((feedback) => (
+                <div key={feedback.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
+                  <p className="text-blue-700"><strong>Feedback:</strong> {feedback.feedback}</p>
+                  <p className="text-blue-700"><strong>Date:</strong> {feedback.date}</p>
+                </div>
+              ))}
+            </div>
           </div>
         );
       case "appointments":
@@ -348,6 +501,15 @@ export default function ProfileSettings() {
             <div className="flex justify-between items-center mb-3">
               <h4 className="text-xl font-semibold text-blue-800">Appointments</h4>
               <div className="flex items-center gap-2">
+                <select
+                  value={appointmentSortOption}
+                  onChange={(e) => setAppointmentSortOption(e.target.value)}
+                  className="p-2 border border-blue-200 rounded-lg bg-blue-50 focus:bg-white focus:border-blue-500 transition duration-200"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="service">Sort by Service</option>
+                </select>
                 <DatePicker
                   selected={selectedDate}
                   onChange={(date) => setSelectedDate(date)}
@@ -363,13 +525,32 @@ export default function ProfileSettings() {
                 </button>
               </div>
             </div>
-            {filterActivities(sampleData.appointments).map((appointment) => (
-              <div key={appointment.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Type:</strong> {appointment.type}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {appointment.date}</p>
-                <p className="text-blue-700"><strong>Time:</strong> {appointment.time}</p>
+
+            {appointmentsLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading appointments...</p>
               </div>
-            ))}
+            ) : filteredAppointments.length === 0 ? (
+              <div className="text-center py-4 text-gray-600">
+                No appointments found.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredAppointments.map((appointment) => (
+                  <div key={appointment._id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <div className="space-y-2">
+                      <p className="text-gray-800"><strong>Service:</strong> {appointment.service}</p>
+                      <p className="text-gray-800"><strong>Date:</strong> {new Date(appointment.preferredDate).toLocaleDateString()}</p>
+                      <p className="text-gray-800"><strong>Time:</strong> {appointment.preferredTime}</p>
+                      {appointment.additionalNotes && (
+                        <p className="text-gray-800"><strong>Notes:</strong> {appointment.additionalNotes}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       case "financial":
@@ -584,23 +765,20 @@ export default function ProfileSettings() {
             {/* Save Changes and Delete Account Buttons (only shown if account is active) */}
             {formData.status === "active" && (
               <>
-                {/* Save Changes and Delete Account Buttons (only shown if account is active) */}
-{formData.status === "active" && (
-  <div className="flex gap-4 mt-5"> {/* Add flex container with gap */}
-    <button
-      className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200"
-      onClick={handleSubmit}
-    >
-      Save Profile
-    </button>
-    <button
-      className="bg-gradient-to-r from-red-600 to-red-500 text-white py-2 px-4 rounded-lg hover:from-red-700 hover:to-red-600 transition duration-200 flex items-center gap-2"
-      onClick={handleDeleteAccount}
-    >
-      <FaTrash /> Delete Account
-    </button>
-  </div>
-)}
+                <div className="flex gap-4 mt-5"> {/* Add flex container with gap */}
+                  <button
+                    className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200"
+                    onClick={handleSubmit}
+                  >
+                    Save Profile
+                  </button>
+                  <button
+                    className="bg-gradient-to-r from-red-600 to-red-500 text-white py-2 px-4 rounded-lg hover:from-red-700 hover:to-red-600 transition duration-200 flex items-center gap-2"
+                    onClick={handleDeleteAccount}
+                  >
+                    <FaTrash /> Delete Account
+                  </button>
+                </div>
               </>
             )}
           </div>

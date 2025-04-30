@@ -39,11 +39,13 @@ const SignIn = () => {
         const data = await response.json();
         console.log("Login successful:", data);
 
-        // Extract userID from the response
-        const userID = data._id; // Ensure the backend sends `userID` in the response
+        // Store tokens and user data
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
 
         // Redirect to UserProfile page with userID as a parameter
-        navigate(`/UserProfile/${userID}`);
+        navigate(`/UserProfile/${data.user._id}`);
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Login failed. Please check your credentials."); // Set error message

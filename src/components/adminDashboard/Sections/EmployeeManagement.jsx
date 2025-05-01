@@ -402,7 +402,7 @@ const EmployeeManagement = () => {
     } catch (error) {
       console.error('Error deleting employee:', error);
       setError(error.message);
-      }
+    }
     }
   };
 

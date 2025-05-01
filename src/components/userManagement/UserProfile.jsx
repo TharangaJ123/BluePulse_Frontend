@@ -1,11 +1,25 @@
 import { useState, useEffect, useMemo } from "react";
 import React from 'react';
-import { FaCalendarAlt, FaDownload, FaTrash, FaUser, FaShoppingCart, FaComments, FaClock, FaMoneyBillAlt, FaMapMarkerAlt, FaBell, FaChartLine, FaHistory, FaEnvelope } from "react-icons/fa"; // Icons from react-icons
-import DatePicker from "react-datepicker"; // DatePicker component
-import "react-datepicker/dist/react-datepicker.css"; // DatePicker CSS
-import { useParams } from "react-router-dom"; // Import useParams
-import jsPDF from "jspdf"; // Import jsPDF for PDF generation
-import { motion, AnimatePresence } from "framer-motion"; // Add this import at the top
+import { 
+  FaCalendarAlt, 
+  FaDownload, 
+  FaTrash, 
+  FaUser, 
+  FaShoppingCart, 
+  FaComments, 
+  FaClock, 
+  FaMoneyBillAlt, 
+  FaMapMarkerAlt, 
+  FaBell, 
+  FaChartLine, 
+  FaHistory, 
+  FaEnvelope 
+} from "react-icons/fa";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { useParams } from "react-router-dom";
+import jsPDF from "jspdf";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Animation variants
 const containerVariants = {
@@ -53,17 +67,18 @@ export default function ProfileSettings() {
     created_at: "",
     updated_at: "",
     __v: 0,
-    profile_image: "", // Add profile_image field
+    profile_image: "",
   });
 
-  const [activeSection, setActiveSection] = useState("profile"); // Track active section
-  const [selectedDate, setSelectedDate] = useState(null); // Track selected date for filtering
-  const [error, setError] = useState(""); // Track errors
-  const [loading, setLoading] = useState(true); // Track loading state
-  const [selectedImage, setSelectedImage] = useState(null); // Track selected image for upload
+  const [activeSection, setActiveSection] = useState("profile");
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
   
   // Community posts states
   const [communityPosts, setCommunityPosts] = useState([]);
+  const [allCommunityPosts, setAllCommunityPosts] = useState([]);
   const [communityLoading, setCommunityLoading] = useState(true);
   const [sortOption, setSortOption] = useState('newest');
 
@@ -77,7 +92,7 @@ export default function ProfileSettings() {
   const [financialLoading, setFinancialLoading] = useState(true);
   const [financialSortOption, setFinancialSortOption] = useState('newest');
 
-  // New state variables for additional features
+  // Notification states
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [recentActivity, setRecentActivity] = useState([]);
@@ -88,27 +103,7 @@ export default function ProfileSettings() {
     communityPosts: 0
   });
 
-  // Sample data for sidebar sections
-  const sampleData = {
-    onlinePurchases: [
-      { id: 1, item: "Laptop", date: "2023-10-01", amount: "$1200" },
-      { id: 2, item: "Headphones", date: "2023-09-25", amount: "$150" },
-    ],
-    communityFeedback: [
-      { id: 1, feedback: "Great community support!", date: "2023-10-05" },
-      { id: 2, feedback: "Need more events.", date: "2023-09-30" },
-    ],
-    appointments: [
-      { id: 1, type: "Doctor", date: "2023-10-10", time: "10:00 AM" },
-      { id: 2, type: "Dentist", date: "2023-10-15", time: "2:00 PM" },
-    ],
-    financial: [
-      { id: 1, transaction: "Salary", date: "2023-10-01", amount: "$5000" },
-      { id: 2, transaction: "Rent", date: "2023-10-05", amount: "$1200" },
-    ],
-  };
-
-  // Fetch user details when the component mounts or userId changes
+  // Fetch user details
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
@@ -117,7 +112,6 @@ export default function ProfileSettings() {
           throw new Error("Failed to fetch user details");
         }
         const data = await response.json();
-        // Update formData with fetched data
         setFormData({
           _id: data._id,
           full_name: data.full_name,
@@ -127,10 +121,9 @@ export default function ProfileSettings() {
           created_at: data.created_at,
           updated_at: data.updated_at,
           __v: data.__v,
-          profile_image: data.profile_image || "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg", // Default image if none provided
+          profile_image: data.profile_image || "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg",
         });
 
-        // Display alert if account is not active
         if (data.status !== "active") {
           alert("This account is not on active mode or has been deleted by the owner.");
         }
@@ -138,41 +131,44 @@ export default function ProfileSettings() {
         console.error("Error fetching user details:", error);
         setError("Failed to load user details. Please try again.");
       } finally {
-        setLoading(false); // Set loading to false after the request completes
+        setLoading(false);
       }
     };
 
     fetchUserDetails();
   }, [id]);
 
-  // Fetch community posts when email changes
+  // Fetch all community posts
   useEffect(() => {
-    const fetchCommunityPosts = async () => {
-      if (!formData.email) return;
-      
+    const fetchAllCommunityPosts = async () => {
       try {
-        const response = await fetch(`http://localhost:8070/commi/getByEmail/${encodeURIComponent(formData.email)}`);
+        const response = await fetch('http://localhost:8070/commi/getAll');
         if (!response.ok) {
-          if (response.status === 404) {
-            setCommunityPosts([]);
-            return;
-          }
           throw new Error("Failed to fetch community posts");
         }
         const data = await response.json();
-        setCommunityPosts(data);
+        setAllCommunityPosts(data);
       } catch (error) {
         console.error("Error fetching community posts:", error);
-        setCommunityPosts([]);
-      } finally {
-        setCommunityLoading(false);
+        setAllCommunityPosts([]);
       }
     };
 
-    fetchCommunityPosts();
-  }, [formData.email]);
+    fetchAllCommunityPosts();
+  }, []);
 
-  // Fetch appointments when email changes
+  // Filter community posts by user email
+  useEffect(() => {
+    if (formData.email && allCommunityPosts.length > 0) {
+      const filteredPosts = allCommunityPosts.filter(post => 
+        post.email === formData.email
+      );
+      setCommunityPosts(filteredPosts);
+      setCommunityLoading(false);
+    }
+  }, [formData.email, allCommunityPosts]);
+
+  // Fetch appointments
   useEffect(() => {
     const fetchAppointments = async () => {
       if (!formData.email) return;
@@ -183,7 +179,6 @@ export default function ProfileSettings() {
         
         if (!response.ok) {
           if (response.status === 404) {
-            console.log("No appointments found for this user");
             setAppointments([]);
             return;
           }
@@ -191,9 +186,6 @@ export default function ProfileSettings() {
         }
         
         const data = await response.json();
-        console.log("Fetched appointments:", data);
-        
-        // Format the appointments data
         const formattedAppointments = data.map(appointment => ({
           _id: appointment._id,
           service_type: appointment.service_type || appointment.service || 'Unnamed Service',
@@ -217,7 +209,7 @@ export default function ProfileSettings() {
     fetchAppointments();
   }, [formData.email]);
 
-  // Fetch financial records when email changes
+  // Fetch financial records
   useEffect(() => {
     const fetchFinancialRecords = async () => {
       if (!formData.email) return;
@@ -228,7 +220,6 @@ export default function ProfileSettings() {
         
         if (!response.ok) {
           if (response.status === 404) {
-            console.log("No financial records found for this user");
             setFinancialRecords([]);
             return;
           }
@@ -236,9 +227,6 @@ export default function ProfileSettings() {
         }
         
         const data = await response.json();
-        console.log("Fetched financial records:", data);
-        
-        // Ensure the data is in the correct format
         const formattedRecords = data.map(record => ({
           _id: record._id,
           description: record.description || record.transactionType || 'Unnamed Transaction',
@@ -285,7 +273,7 @@ export default function ProfileSettings() {
     fetchNotifications();
   }, [formData.email]);
 
-  // Update quick stats when data changes
+  // Update quick stats
   useEffect(() => {
     setQuickStats({
       totalAppointments: appointments.length,
@@ -341,7 +329,7 @@ export default function ProfileSettings() {
     });
   }, [communityPosts, sortOption]);
 
-  // Sort appointments based on selected option
+  // Sort appointments
   const sortedAppointments = useMemo(() => {
     return [...appointments].sort((a, b) => {
       switch (appointmentSortOption) {
@@ -357,7 +345,7 @@ export default function ProfileSettings() {
     });
   }, [appointments, appointmentSortOption]);
 
-  // Filter appointments based on selected date
+  // Filter appointments by date
   const filteredAppointments = useMemo(() => {
     if (!selectedDate) return sortedAppointments;
     const selectedDateString = selectedDate.toISOString().split('T')[0];
@@ -366,7 +354,7 @@ export default function ProfileSettings() {
     );
   }, [sortedAppointments, selectedDate]);
 
-  // Sort financial records based on selected option
+  // Sort financial records
   const sortedFinancialRecords = useMemo(() => {
     return [...financialRecords].sort((a, b) => {
       switch (financialSortOption) {
@@ -384,7 +372,7 @@ export default function ProfileSettings() {
     });
   }, [financialRecords, financialSortOption]);
 
-  // Filter financial records based on selected date
+  // Filter financial records by date
   const filteredFinancialRecords = useMemo(() => {
     if (!selectedDate) return sortedFinancialRecords;
     const selectedDateString = selectedDate.toISOString().split('T')[0];
@@ -393,6 +381,7 @@ export default function ProfileSettings() {
     );
   }, [sortedFinancialRecords, selectedDate]);
 
+  // Handle form changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -403,7 +392,7 @@ export default function ProfileSettings() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSelectedImage(reader.result); // Set the selected image for preview
+        setSelectedImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -422,7 +411,7 @@ export default function ProfileSettings() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ profile_image: selectedImage }), // Send the new image URL
+        body: JSON.stringify({ profile_image: selectedImage }),
       });
 
       if (!response.ok) {
@@ -430,8 +419,7 @@ export default function ProfileSettings() {
       }
 
       const updatedUser = await response.json();
-      console.log("Profile image updated successfully:", updatedUser);
-      setFormData((prevData) => ({ ...prevData, profile_image: selectedImage })); // Update local state
+      setFormData(prev => ({ ...prev, profile_image: selectedImage }));
       alert("Profile image updated successfully!");
     } catch (error) {
       console.error("Error updating profile image:", error);
@@ -439,7 +427,7 @@ export default function ProfileSettings() {
     }
   };
 
-  // Save Changes Functionality
+  // Save profile changes
   const handleSubmit = async () => {
     if (!formData.full_name || !formData.email) {
       setError("Full Name and Email are required.");
@@ -452,7 +440,7 @@ export default function ProfileSettings() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData), // Send updated form data
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -460,8 +448,7 @@ export default function ProfileSettings() {
       }
 
       const updatedUser = await response.json();
-      console.log("User data updated successfully:", updatedUser);
-      setError(""); // Clear error on successful submission
+      setError("");
       alert("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating user data:", error);
@@ -469,7 +456,7 @@ export default function ProfileSettings() {
     }
   };
 
-  // Delete Account Functionality
+  // Delete account
   const handleDeleteAccount = async () => {
     const confirmDelete = window.confirm("Are you sure you want to delete your account? This action cannot be undone.");
     if (confirmDelete) {
@@ -479,7 +466,7 @@ export default function ProfileSettings() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "inactive" }), // Update status to inactive
+          body: JSON.stringify({ status: "inactive" }),
         });
 
         if (!response.ok) {
@@ -487,56 +474,38 @@ export default function ProfileSettings() {
         }
 
         const updatedUser = await response.json();
-        console.log("Account status updated to inactive:", updatedUser);
         alert("Account status updated to inactive.");
-        setFormData((prevData) => ({ ...prevData, status: "inactive" })); // Update local state
+        setFormData(prev => ({ ...prev, status: "inactive" }));
       } catch (error) {
         console.error("Error updating account status:", error);
         alert("Failed to update account status. Please try again.");
       }
-    } else {
-      console.log("Account deletion canceled.");
     }
   };
 
-  // Filter activities based on the selected date
-  const filterActivities = (activities) => {
-    if (!selectedDate) return activities; // Return all activities if no date is selected
-    const selectedDateString = selectedDate.toISOString().split('T')[0];
-    return activities.filter((activity) => activity.date === selectedDateString);
-  };
-
-  // Handle report download as PDF
+  // Download report as PDF
   const handleDownloadReport = () => {
-    // Create a new PDF document
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
     let yPosition = 20;
     const lineHeight = 10;
 
-    // Add title
     doc.setFontSize(18);
-    doc.setTextColor(0, 0, 0);
     const title = `${activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} Report`;
     doc.text(title, margin, yPosition);
     yPosition += lineHeight * 2;
 
-    // Add date filter if selected
     if (selectedDate) {
-    doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(12);
       doc.text(`Filtered by date: ${formatDate(selectedDate)}`, margin, yPosition);
       yPosition += lineHeight * 1.5;
     }
 
-    // Add content based on active section
     doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
 
     switch (activeSection) {
       case "profile":
-        // Add profile information
         const profileFields = [
           { label: "Full Name", value: formData.full_name },
           { label: "Email", value: formData.email },
@@ -557,7 +526,6 @@ export default function ProfileSettings() {
         break;
 
       case "appointments":
-        // Add appointments summary
         const totalAppointments = filteredAppointments.length;
         const completedAppointments = filteredAppointments.filter(a => a.status === 'completed').length;
         const pendingAppointments = filteredAppointments.filter(a => a.status === 'pending').length;
@@ -569,7 +537,6 @@ export default function ProfileSettings() {
         doc.text(`Pending: ${pendingAppointments}`, margin, yPosition);
         yPosition += lineHeight * 1.5;
 
-        // Add individual appointments
         filteredAppointments.forEach(appointment => {
           if (yPosition > doc.internal.pageSize.getHeight() - margin) {
             doc.addPage();
@@ -581,14 +548,14 @@ export default function ProfileSettings() {
           yPosition += lineHeight;
 
           doc.setFont(undefined, 'normal');
-          const appointmentDetails = [
+          const details = [
             `Date: ${formatDate(appointment.date)}`,
             `Cost: $${appointment.cost}`,
             `Status: ${appointment.status}`,
             appointment.notes ? `Notes: ${appointment.notes}` : null
           ].filter(Boolean);
 
-          appointmentDetails.forEach(detail => {
+          details.forEach(detail => {
             doc.text(detail, margin + 5, yPosition);
             yPosition += lineHeight;
           });
@@ -597,7 +564,6 @@ export default function ProfileSettings() {
         break;
 
       case "financial":
-        // Add financial summary
         const totalIncome = filteredFinancialRecords
           .filter(record => record.type === 'income')
           .reduce((sum, record) => sum + record.amount, 0);
@@ -613,7 +579,6 @@ export default function ProfileSettings() {
         doc.text(`Balance: $${balance.toFixed(2)}`, margin, yPosition);
         yPosition += lineHeight * 1.5;
 
-        // Add individual transactions
         filteredFinancialRecords.forEach(record => {
           if (yPosition > doc.internal.pageSize.getHeight() - margin) {
             doc.addPage();
@@ -625,14 +590,14 @@ export default function ProfileSettings() {
           yPosition += lineHeight;
 
           doc.setFont(undefined, 'normal');
-          const transactionDetails = [
+          const details = [
             `Date: ${formatDate(record.date)}`,
             `Amount: ${record.type === 'income' ? '+' : '-'}$${Math.abs(record.amount).toFixed(2)}`,
             `Type: ${record.type}`,
             record.notes ? `Notes: ${record.notes}` : null
           ].filter(Boolean);
 
-          transactionDetails.forEach(detail => {
+          details.forEach(detail => {
             doc.text(detail, margin + 5, yPosition);
             yPosition += lineHeight;
           });
@@ -640,35 +605,27 @@ export default function ProfileSettings() {
         });
         break;
 
-      case "onlinePurchases":
-        // Add purchases summary
-        const totalPurchases = sampleData.onlinePurchases.length;
-        const totalSpent = sampleData.onlinePurchases.reduce((sum, purchase) => 
-          sum + parseFloat(purchase.amount.replace('$', '')), 0);
-
-        doc.text(`Total Purchases: ${totalPurchases}`, margin, yPosition);
-        yPosition += lineHeight;
-        doc.text(`Total Spent: $${totalSpent.toFixed(2)}`, margin, yPosition);
+      case "community":
+        doc.text(`Total Community Posts: ${communityPosts.length}`, margin, yPosition);
         yPosition += lineHeight * 1.5;
 
-        // Add individual purchases
-        sampleData.onlinePurchases.forEach(purchase => {
+        sortedPosts.forEach(post => {
           if (yPosition > doc.internal.pageSize.getHeight() - margin) {
             doc.addPage();
             yPosition = margin;
           }
 
           doc.setFont(undefined, 'bold');
-          doc.text(purchase.item, margin, yPosition);
+          doc.text(`Location: ${post.location}`, margin, yPosition);
           yPosition += lineHeight;
 
           doc.setFont(undefined, 'normal');
-          const purchaseDetails = [
-            `Date: ${purchase.date}`,
-            `Amount: ${purchase.amount}`
+          const details = [
+            `Description: ${post.description}`,
+            `Posted on: ${formatDate(post.createdAt)}`
           ];
 
-          purchaseDetails.forEach(detail => {
+          details.forEach(detail => {
             doc.text(detail, margin + 5, yPosition);
             yPosition += lineHeight;
           });
@@ -677,12 +634,10 @@ export default function ProfileSettings() {
         break;
     }
 
-    // Add footer
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
       doc.text(
         `Generated on ${new Date().toLocaleString()}`,
         margin,
@@ -695,11 +650,10 @@ export default function ProfileSettings() {
       );
     }
 
-    // Save the PDF
     doc.save(`${activeSection}_report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  // Add a helper function for date formatting
+  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return 'No date';
     const date = new Date(dateString);
@@ -711,7 +665,149 @@ export default function ProfileSettings() {
     });
   };
 
-  // Render content based on the active section
+  // Notification center component
+  const NotificationCenter = () => (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50"
+    >
+      <div className="p-4 border-b">
+        <h3 className="text-lg font-semibold">Notifications</h3>
+      </div>
+      <div className="max-h-96 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">
+            No new notifications
+          </div>
+        ) : (
+          notifications.map((notification, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-4 border-b hover:bg-gray-50"
+            >
+              <div className="flex items-start">
+                <FaBell className="mt-1 mr-3 text-blue-500" />
+                <div>
+                  <p className="font-medium">{notification.title}</p>
+                  <p className="text-sm text-gray-600">{notification.message}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(notification.date).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
+    </motion.div>
+  );
+
+  // Quick stats component
+  const QuickStats = () => (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"
+    >
+      <motion.div
+        variants={cardVariants}
+        whileHover="hover"
+        className="bg-white p-4 rounded-lg shadow-md"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">Total Appointments</p>
+            <p className="text-2xl font-bold text-blue-600">{quickStats.totalAppointments}</p>
+          </div>
+          <FaCalendarAlt className="text-2xl text-blue-500" />
+        </div>
+      </motion.div>
+
+      <motion.div
+        variants={cardVariants}
+        whileHover="hover"
+        className="bg-white p-4 rounded-lg shadow-md"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">Completed</p>
+            <p className="text-2xl font-bold text-green-600">{quickStats.completedAppointments}</p>
+          </div>
+          <FaChartLine className="text-2xl text-green-500" />
+        </div>
+      </motion.div>
+
+      <motion.div
+        variants={cardVariants}
+        whileHover="hover"
+        className="bg-white p-4 rounded-lg shadow-md"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">Total Spent</p>
+            <p className="text-2xl font-bold text-red-600">${quickStats.totalSpent.toFixed(2)}</p>
+          </div>
+          <FaMoneyBillAlt className="text-2xl text-red-500" />
+        </div>
+      </motion.div>
+
+      <motion.div
+        variants={cardVariants}
+        whileHover="hover"
+        className="bg-white p-4 rounded-lg shadow-md"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">Community Posts</p>
+            <p className="text-2xl font-bold text-purple-600">{quickStats.communityPosts}</p>
+          </div>
+          <FaComments className="text-2xl text-purple-500" />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
+  // Recent activity component
+  const RecentActivity = () => (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="bg-white rounded-lg p-6 shadow-lg mb-6"
+    >
+      <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+      <div className="space-y-4">
+        {recentActivity.slice(0, 5).map((activity, index) => (
+          <motion.div
+            key={index}
+            variants={itemVariants}
+            className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
+          >
+            <div className="p-2 bg-blue-100 rounded-full">
+              {activity.icon}
+            </div>
+            <div>
+              <p className="font-medium">{activity.title}</p>
+              <p className="text-sm text-gray-600">
+                {activity.type === 'appointment' && `Status: ${activity.status}`}
+                {activity.type === 'financial' && `Amount: $${Math.abs(activity.amount).toFixed(2)}`}
+                {activity.type === 'community' && 'New community post'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {activity.date.toLocaleString()}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+
+  // Render content based on active section
   const renderContent = () => {
     if (loading) {
       return <p className="text-blue-800">Loading user details...</p>;
@@ -721,29 +817,19 @@ export default function ProfileSettings() {
       return <p className="text-red-500">{error}</p>;
     }
 
-    // If account is not active, display a message and disable editing
     if (formData.status !== "active") {
       return (
         <div>
           <h4 className="text-xl font-semibold mb-3 text-blue-800">Profile Settings</h4>
           <p className="text-red-500 mb-3">This account is not on active mode or has been deleted by the owner.</p>
 
-          {/* Read-only fields */}
           <div className="mt-3 flex flex-col gap-2">
             {[
               { name: "full_name", label: "Full Name", value: formData.full_name },
               { name: "email", label: "Email", value: formData.email },
               { name: "phone_number", label: "Phone Number", value: formData.phone_number },
-              {
-                name: "created_at",
-                label: "Created At",
-                value: new Date(formData.created_at).toLocaleString(),
-              },
-              {
-                name: "updated_at",
-                label: "Updated At",
-                value: new Date(formData.updated_at).toLocaleString(),
-              },
+              { name: "created_at", label: "Created At", value: new Date(formData.created_at).toLocaleString() },
+              { name: "updated_at", label: "Updated At", value: new Date(formData.updated_at).toLocaleString() },
               { name: "__v", label: "Version", value: formData.__v },
             ].map((field) => (
               <div key={field.name}>
@@ -754,7 +840,7 @@ export default function ProfileSettings() {
                   placeholder={field.label}
                   className="p-2 border border-blue-200 rounded-lg bg-blue-50 focus:bg-white focus:border-blue-500 transition duration-200 w-full"
                   value={field.value}
-                  readOnly // Make the field read-only
+                  readOnly
                 />
               </div>
             ))}
@@ -763,7 +849,6 @@ export default function ProfileSettings() {
       );
     }
 
-    // If account is active, allow editing
     switch (activeSection) {
       case "profile":
         return (
@@ -776,7 +861,7 @@ export default function ProfileSettings() {
             <motion.div variants={itemVariants} className="flex flex-col items-center mb-8">
               <div className="relative w-32 h-32 mb-4">
                 <motion.img
-                  src={formData.profile_image || "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"}
+                  src={formData.profile_image}
                   alt="Profile"
                   className="w-full h-full rounded-full object-cover border-4 border-blue-500"
                   onError={(e) => {
@@ -867,6 +952,16 @@ export default function ProfileSettings() {
             </motion.div>
 
             <motion.div variants={itemVariants} className="mt-8 flex justify-end space-x-4">
+              {selectedImage && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                  onClick={handleImageUpload}
+                >
+                  Save Image
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -886,113 +981,109 @@ export default function ProfileSettings() {
             </motion.div>
           </motion.div>
         );
-      case "onlinePurchases":
+
+      case "community":
         return (
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="text-xl font-semibold text-blue-800">Online Purchases</h4>
-              <div className="flex items-center gap-2">
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={(date) => setSelectedDate(date)}
-                  dateFormat="MMMM d, yyyy"
-                  className="p-2 border border-blue-200 rounded-lg bg-blue-50 focus:bg-white focus:border-blue-500 transition duration-200"
-                  placeholderText="Select a date"
-                />
-                <button
-                  className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200 flex items-center gap-2"
-                  onClick={handleDownloadReport}
-                >
-                  <FaDownload /> Download Report
-                </button>
-              </div>
-            </div>
-            {filterActivities(sampleData.onlinePurchases).map((purchase) => (
-              <div key={purchase.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Item:</strong> {purchase.item}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {purchase.date}</p>
-                <p className="text-blue-700"><strong>Amount:</strong> {purchase.amount}</p>
-              </div>
-            ))}
-          </div>
-        );
-      case "communityFeedback":
-        return (
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="text-xl font-semibold text-blue-800">Community & Feedback</h4>
-              <div className="flex items-center gap-2">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="bg-white rounded-lg p-6 shadow-lg backdrop-blur-lg bg-opacity-90"
+          >
+            <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Community Posts</h2>
+              <div className="flex items-center space-x-4">
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="p-2 border border-blue-200 rounded-lg bg-blue-50 focus:bg-white focus:border-blue-500 transition duration-200"
+                  className="px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
-                  <option value="location">Sort by Location</option>
+                  <option value="location">By Location</option>
                 </select>
                 <DatePicker
                   selected={selectedDate}
-                  onChange={(date) => setSelectedDate(date)}
-                  dateFormat="MMMM d, yyyy"
-                  className="p-2 border border-blue-200 rounded-lg bg-blue-50 focus:bg-white focus:border-blue-500 transition duration-200"
-                  placeholderText="Select a date"
+                  onChange={date => setSelectedDate(date)}
+                  placeholderText="Filter by date"
+                  className="px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <button
-                  className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200 flex items-center gap-2"
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleDownloadReport}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
                 >
-                  <FaDownload /> Download Report
-                </button>
+                  <FaDownload />
+                  <span>Download Report</span>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
 
             {communityLoading ? (
-              <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading community posts...</p>
-              </div>
-            ) : sortedPosts.length === 0 ? (
-              <div className="text-center py-4 text-gray-600">
-                No community posts found.
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-center items-center h-48"
+              >
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              </motion.div>
+            ) : communityPosts.length === 0 ? (
+              <motion.div
+                variants={itemVariants}
+                className="text-center py-12 bg-gray-50 rounded-lg"
+              >
+                <FaComments className="mx-auto text-4xl text-gray-400 mb-4" />
+                <p className="text-gray-600">No community posts found</p>
+              </motion.div>
             ) : (
-              <div className="space-y-4">
-                {sortedPosts.map((post) => (
-                  <div key={post._id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
-                    {post.photo && (
-                      <img
-                        src={`http://localhost:8070${post.photo}`}
-                        alt="Post"
-                        className="w-full h-48 object-cover rounded-lg mb-4"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "https://via.placeholder.com/400x300?text=No+Image+Available";
-                        }}
-                      />
-                    )}
-                    <div className="space-y-2">
-                      <p className="text-gray-800"><strong>Location:</strong> {post.location}</p>
-                      <p className="text-gray-800"><strong>Description:</strong> {post.description}</p>
-                      <p className="text-sm text-gray-500">Posted on: {new Date(post.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <motion.div variants={itemVariants} className="space-y-4">
+                <AnimatePresence>
+                  {sortedPosts.map((post) => (
+                    <motion.div
+                      key={post._id}
+                      variants={cardVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      whileHover="hover"
+                      className="bg-white p-6 rounded-lg shadow-md border border-gray-100"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                            {post.location}
+                          </h3>
+                          <div className="space-y-2">
+                            <p className="text-gray-600">
+                              {post.description}
+                            </p>
+                            {post.photo && (
+                              <img
+                                src={`http://localhost:8070${post.photo}`}
+                                alt="Community post"
+                                className="mt-2 max-w-full h-auto rounded-lg"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "https://via.placeholder.com/400x300?text=No+Image+Available";
+                                }}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center text-sm text-gray-500">
+                        <FaClock className="mr-2" />
+                        <span>{formatDate(post.createdAt)}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
             )}
-
-            {/* Display feedback section */}
-            <div className="mt-6">
-              <h5 className="text-lg font-semibold text-blue-800 mb-3">Your Feedback</h5>
-            {filterActivities(sampleData.communityFeedback).map((feedback) => (
-              <div key={feedback.id} className="p-4 border border-blue-200 rounded-lg mb-3 bg-blue-50 hover:bg-blue-100 transition duration-200">
-                <p className="text-blue-700"><strong>Feedback:</strong> {feedback.feedback}</p>
-                <p className="text-blue-700"><strong>Date:</strong> {feedback.date}</p>
-              </div>
-            ))}
-            </div>
-          </div>
+          </motion.div>
         );
+
       case "appointments":
         return (
           <motion.div
@@ -1070,8 +1161,8 @@ export default function ProfileSettings() {
                         {filteredAppointments.filter(a => a.status === 'pending').length}
                       </p>
                     </motion.div>
-            </div>
-              </div>
+                  </div>
+                </div>
 
                 <div className="flex justify-end mb-4">
                   <select
@@ -1083,7 +1174,7 @@ export default function ProfileSettings() {
                     <option value="oldest">Oldest First</option>
                     <option value="status">By Status</option>
                   </select>
-          </div>
+                </div>
 
                 <AnimatePresence>
                   {filteredAppointments.map((appointment) => (
@@ -1141,6 +1232,7 @@ export default function ProfileSettings() {
             )}
           </motion.div>
         );
+
       case "financial":
         return (
           <motion.div
@@ -1216,8 +1308,8 @@ export default function ProfileSettings() {
                           .toFixed(2)}
                       </p>
                     </motion.div>
-            </div>
-              </div>
+                  </div>
+                </div>
 
                 <div className="flex justify-end mb-4">
                   <select
@@ -1230,7 +1322,7 @@ export default function ProfileSettings() {
                     <option value="amount">By Amount</option>
                     <option value="type">By Type</option>
                   </select>
-          </div>
+                </div>
 
                 <AnimatePresence>
                   {filteredFinancialRecords.map((record) => (
@@ -1281,13 +1373,13 @@ export default function ProfileSettings() {
             )}
           </motion.div>
         );
+
       default:
         return (
           <div>
-            <h4 className="text-xl font-semibold mb-3 text-blue-800"></h4>
+            <h4 className="text-xl font-semibold mb-3 text-blue-800">Profile Settings</h4>
             {error && <p className="text-red-500 mb-3">{error}</p>}
 
-            {/* Profile Image Section */}
             <div className="flex flex-col items-center mb-5">
               <img
                 className="rounded-full w-36 h-36 border-4 border-blue-200 mb-3"
@@ -1317,7 +1409,6 @@ export default function ProfileSettings() {
               )}
             </div>
 
-            {/* Editable fields */}
             <div className="grid grid-cols-2 gap-4 mt-3">
               <div>
                 <p className="text-sm text-blue-600 mb-1">First Name</p>
@@ -1372,7 +1463,6 @@ export default function ProfileSettings() {
                 </div>
               ))}
 
-              {/* Account Status Tile */}
               <div className="mt-3">
                 <p className="text-sm text-blue-600 mb-1">Account Status</p>
                 <div
@@ -1431,7 +1521,6 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Read-only fields */}
             <div className="mt-3 flex flex-col gap-2">
               {[
                 {
@@ -1444,7 +1533,6 @@ export default function ProfileSettings() {
                   label: "Updated At",
                   value: new Date(formData.updated_at).toLocaleString(),
                 },
-                
               ].map((field) => (
                 <div key={field.name}>
                   <p className="text-sm text-blue-600 mb-1">{field.label}</p>
@@ -1454,177 +1542,32 @@ export default function ProfileSettings() {
                     placeholder={field.label}
                     className="p-2 border border-blue-200 rounded-lg bg-blue-50 focus:bg-white focus:border-blue-500 transition duration-200 w-full"
                     value={field.value}
-                    readOnly // Make the field read-only
+                    readOnly
                   />
                 </div>
               ))}
             </div>
 
-            {/* Save Changes and Delete Account Buttons (only shown if account is active) */}
             {formData.status === "active" && (
-              <>
-  <div className="flex gap-4 mt-5"> {/* Add flex container with gap */}
-    <button
-      className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200"
-      onClick={handleSubmit}
-    >
-      Save Profile
-    </button>
-    <button
-      className="bg-gradient-to-r from-red-600 to-red-500 text-white py-2 px-4 rounded-lg hover:from-red-700 hover:to-red-600 transition duration-200 flex items-center gap-2"
-      onClick={handleDeleteAccount}
-    >
-      <FaTrash /> Delete Account
-    </button>
-  </div>
-              </>
+              <div className="flex gap-4 mt-5">
+                <button
+                  className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-600 transition duration-200"
+                  onClick={handleSubmit}
+                >
+                  Save Profile
+                </button>
+                <button
+                  className="bg-gradient-to-r from-red-600 to-red-500 text-white py-2 px-4 rounded-lg hover:from-red-700 hover:to-red-600 transition duration-200 flex items-center gap-2"
+                  onClick={handleDeleteAccount}
+                >
+                  <FaTrash /> Delete Account
+                </button>
+              </div>
             )}
           </div>
         );
     }
   };
-
-  // Add notification component
-  const NotificationCenter = () => (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50"
-    >
-      <div className="p-4 border-b">
-        <h3 className="text-lg font-semibold">Notifications</h3>
-      </div>
-      <div className="max-h-96 overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">
-            No new notifications
-          </div>
-        ) : (
-          notifications.map((notification, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="p-4 border-b hover:bg-gray-50"
-            >
-              <div className="flex items-start">
-                <FaBell className="mt-1 mr-3 text-blue-500" />
-                <div>
-                  <p className="font-medium">{notification.title}</p>
-                  <p className="text-sm text-gray-600">{notification.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {new Date(notification.date).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))
-        )}
-      </div>
-    </motion.div>
-  );
-
-  // Add Quick Stats component
-  const QuickStats = () => (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"
-    >
-      <motion.div
-        variants={cardVariants}
-        whileHover="hover"
-        className="bg-white p-4 rounded-lg shadow-md"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">Total Appointments</p>
-            <p className="text-2xl font-bold text-blue-600">{quickStats.totalAppointments}</p>
-          </div>
-          <FaCalendarAlt className="text-2xl text-blue-500" />
-        </div>
-      </motion.div>
-
-      <motion.div
-        variants={cardVariants}
-        whileHover="hover"
-        className="bg-white p-4 rounded-lg shadow-md"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">Completed</p>
-            <p className="text-2xl font-bold text-green-600">{quickStats.completedAppointments}</p>
-          </div>
-          <FaChartLine className="text-2xl text-green-500" />
-        </div>
-      </motion.div>
-
-      <motion.div
-        variants={cardVariants}
-        whileHover="hover"
-        className="bg-white p-4 rounded-lg shadow-md"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">Total Spent</p>
-            <p className="text-2xl font-bold text-red-600">${quickStats.totalSpent.toFixed(2)}</p>
-          </div>
-          <FaMoneyBillAlt className="text-2xl text-red-500" />
-        </div>
-      </motion.div>
-
-      <motion.div
-        variants={cardVariants}
-        whileHover="hover"
-        className="bg-white p-4 rounded-lg shadow-md"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">Community Posts</p>
-            <p className="text-2xl font-bold text-purple-600">{quickStats.communityPosts}</p>
-          </div>
-          <FaComments className="text-2xl text-purple-500" />
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-
-  // Add Recent Activity component
-  const RecentActivity = () => (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-white rounded-lg p-6 shadow-lg mb-6"
-    >
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
-      <div className="space-y-4">
-        {recentActivity.slice(0, 5).map((activity, index) => (
-          <motion.div
-            key={index}
-            variants={itemVariants}
-            className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
-          >
-            <div className="p-2 bg-blue-100 rounded-full">
-              {activity.icon}
-            </div>
-            <div>
-              <p className="font-medium">{activity.title}</p>
-              <p className="text-sm text-gray-600">
-                {activity.type === 'appointment' && `Status: ${activity.status}`}
-                {activity.type === 'financial' && `Amount: $${Math.abs(activity.amount).toFixed(2)}`}
-                {activity.type === 'community' && 'New community post'}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                {activity.date.toLocaleString()}
-              </p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
 
   return (
     <motion.div
@@ -1643,8 +1586,8 @@ export default function ProfileSettings() {
             <div className="flex flex-wrap gap-4">
               {[
                 { id: "profile", icon: <FaUser />, label: "Profile" },
+                { id: "community", icon: <FaComments />, label: "Community" },
                 { id: "appointments", icon: <FaCalendarAlt />, label: "Appointments" },
-                { id: "onlinePurchases", icon: <FaShoppingCart />, label: "Purchases" },
                 { id: "financial", icon: <FaMoneyBillAlt />, label: "Financial" }
               ].map((item) => (
                 <motion.button
@@ -1661,8 +1604,8 @@ export default function ProfileSettings() {
                   {item.icon}
                   <span>{item.label}</span>
                 </motion.button>
-            ))}
-          </div>
+              ))}
+            </div>
             <div className="relative">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -1679,7 +1622,7 @@ export default function ProfileSettings() {
                 )}
               </motion.button>
               {showNotifications && <NotificationCenter />}
-        </div>
+            </div>
           </motion.div>
         </motion.nav>
 
@@ -1697,10 +1640,10 @@ export default function ProfileSettings() {
                 <RecentActivity />
               </>
             )}
-          {renderContent()}
+            {renderContent()}
           </motion.div>
         </AnimatePresence>
-        </div>
+      </div>
     </motion.div>
   );
 }

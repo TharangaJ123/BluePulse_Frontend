@@ -105,6 +105,34 @@ export default function ProfileSettings() {
     communityPosts: 0
   });
 
+  // Edit modal states
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState({
+    full_name: "",
+    email: "",
+    phone_number: "",
+  });
+
+  // Password modal states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  // Success modal states
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Add these state variables at the top with other state declarations
+  const [showModal, setShowModal] = useState({
+    isOpen: false,
+    type: '', // 'success' or 'error'
+    message: '',
+    title: ''
+  });
+
   // Fetch user details
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -400,10 +428,20 @@ export default function ProfileSettings() {
     }
   };
 
-  // Handle image upload
+  // Add this function to handle showing modals
+  const showModalMessage = (type, title, message) => {
+    setShowModal({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+
+  // Update handleImageUpload function
   const handleImageUpload = async () => {
     if (!selectedImage) {
-      alert("Please select an image to upload.");
+      showModalMessage('error', 'Error', 'Please select an image to upload.');
       return;
     }
 
@@ -422,17 +460,17 @@ export default function ProfileSettings() {
 
       const updatedUser = await response.json();
       setFormData(prev => ({ ...prev, profile_image: selectedImage }));
-      alert("Profile image updated successfully!");
+      showModalMessage('success', 'Success', 'Profile image updated successfully!');
     } catch (error) {
       console.error("Error updating profile image:", error);
-      alert("Failed to update profile image. Please try again.");
+      showModalMessage('error', 'Error', 'Failed to update profile image. Please try again.');
     }
   };
 
-  // Save profile changes
+  // Update handleSubmit function
   const handleSubmit = async () => {
     if (!formData.full_name || !formData.email) {
-      setError("Full Name and Email are required.");
+      showModalMessage('error', 'Error', 'Full Name and Email are required.');
       return;
     }
 
@@ -451,14 +489,14 @@ export default function ProfileSettings() {
 
       const updatedUser = await response.json();
       setError("");
-      alert("Profile updated successfully!");
+      showModalMessage('success', 'Success', 'Profile updated successfully!');
     } catch (error) {
       console.error("Error updating user data:", error);
-      setError("Failed to update user data. Please try again.");
+      showModalMessage('error', 'Error', 'Failed to update user data. Please try again.');
     }
   };
 
-  // Delete account
+  // Update handleDeleteAccount function
   const handleDeleteAccount = async () => {
     const confirmDelete = window.confirm("Are you sure you want to delete your account? This action cannot be undone.");
     if (confirmDelete) {
@@ -476,11 +514,11 @@ export default function ProfileSettings() {
         }
 
         const updatedUser = await response.json();
-        alert("Account status updated to inactive.");
+        showModalMessage('success', 'Success', 'Account status updated to inactive.');
         setFormData(prev => ({ ...prev, status: "inactive" }));
       } catch (error) {
         console.error("Error updating account status:", error);
-        alert("Failed to update account status. Please try again.");
+        showModalMessage('error', 'Error', 'Failed to update account status. Please try again.');
       }
     }
   };
@@ -1650,6 +1688,37 @@ export default function ProfileSettings() {
       </div>
     </motion.div>
     <ModernFooter/>
+    
+    {/* Success Modal */}
+    {showModal.isOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md" onClick={() => setShowModal({ ...showModal, isOpen: false })}></div>
+        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative z-50 shadow-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className={`text-xl font-semibold ${showModal.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {showModal.title}
+            </h2>
+            <button
+              onClick={() => setShowModal({ ...showModal, isOpen: false })}
+              className="text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-gray-700">{showModal.message}</p>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={() => setShowModal({ ...showModal, isOpen: false })}
+              className={`px-4 py-2 text-white rounded hover:opacity-90 focus:outline-none ${
+                showModal.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+              }`}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

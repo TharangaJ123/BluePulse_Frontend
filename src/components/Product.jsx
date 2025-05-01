@@ -59,7 +59,6 @@ export default function Product() {
   return (
     <div className="min-h-screen w-full ">
       <NavigationBar />
-      <OnlineStoreNavigationBar />
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Product Details Section */}
         <div className="bg-white overflow-hidden">

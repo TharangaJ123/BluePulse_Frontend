@@ -28,6 +28,7 @@ const Sidebar = ({ setActiveSection, activeSection }) => {
     { text: 'Water Quality Testing', key: 'water-quality-testing', icon: <FaFlask /> },
     { text: 'Appointments', key: 'appointments', icon: <FaCalendarAlt /> },
     { text: 'Online Store & Inventory', key: 'online-store', icon: <FaStore /> },
+    { text: 'Order Management', key: 'order-management', icon: <FaStore /> },
     { text: 'Suppliers Management', key: 'supplier-management', icon: <FaStore /> },
     { text: 'Financial Management', key: 'financial-management', icon: <FaChartLine /> },
     { text: 'Community & Feedback', key: 'community-feedback', icon: <FaComments /> },

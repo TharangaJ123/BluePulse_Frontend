@@ -16,6 +16,7 @@ import RoleAccessManagement from './Sections/RoleAccesManagement';
 import EmployeeTaskManagement from './Sections/EmployeeTaskManagement';
 import SuppliersManagement from './Sections/SuppliersManagement';
 import ContactForms from './Sections/ContactForms';
+import OrderManagement from './Sections/OrderManagement';
 
 function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -77,8 +78,10 @@ function AdminDashboard() {
         return <RoleAccessManagement />;
       case 'employee-task-management':
         return <EmployeeTaskManagement />;
-      case 'contact-forms':
-        return <ContactForms />;
+      case 'employee-task-management':
+        return <EmployeeTaskManagement />;
+      case 'order-management':
+        return <OrderManagement/>;
       default:
         return <MainContent />;
     }

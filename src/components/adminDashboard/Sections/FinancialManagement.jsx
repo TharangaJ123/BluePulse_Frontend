@@ -11,11 +11,10 @@ const FinanceAdmin = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
-  const [stats, setStats] = useState({ total: 0, pending: 0, processed: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
   const [selectedFile, setSelectedFile] = useState(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
 
-  // Document type options
   const documentTypes = [
     'Tax Documents',
     'Bank Statements',
@@ -25,14 +24,12 @@ const FinanceAdmin = () => {
     'Other'
   ];
 
-  // Status options
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'processed', label: 'Processed', color: 'bg-green-100 text-green-800' },
-    { value: 'rejected', label: 'Rejected', color: 'bg-red-100 text-red-800' }
+    { value: 'approved', label: 'Approved', color: 'bg-green-100 text-green-800' },
+    { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' }
   ];
 
-  // Fetch financial submissions
   const fetchSubmissions = useCallback(async () => {
     try {
       setLoading(true);
@@ -40,19 +37,13 @@ const FinanceAdmin = () => {
       if (!response.ok) throw new Error('Failed to fetch submissions');
       
       const data = await response.json();
-      const submissionsWithDate = data.map(sub => ({
-        ...sub,
-        createdAt: sub.createdAt || new Date().toISOString(),
-        status: sub.status || 'pending'
-      }));
-      
-      setSubmissions(submissionsWithDate);
-      setFilteredSubmissions(submissionsWithDate);
+      setSubmissions(data);
+      setFilteredSubmissions(data);
       
       setStats({
         total: data.length,
-        pending: data.filter(s => (s.status || 'pending') === 'pending').length,
-        processed: data.filter(s => s.status === 'processed').length
+        pending: data.filter(s => s.status === 'pending').length,
+        approved: data.filter(s => s.status === 'approved').length
       });
       
       setError(null);
@@ -67,7 +58,6 @@ const FinanceAdmin = () => {
     fetchSubmissions();
   }, [fetchSubmissions]);
 
-  // Filtering and sorting
   useEffect(() => {
     let result = [...submissions];
     
@@ -76,11 +66,11 @@ const FinanceAdmin = () => {
         submission.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         submission.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (submission.contactNumber && submission.contactNumber.includes(searchTerm))
-      ))
+      ));
     }
     
     if (activeFilter !== 'all') {
-      result = result.filter(submission => (submission.status || 'pending') === activeFilter);
+      result = result.filter(submission => submission.status === activeFilter);
     }
     
     if (sortConfig.key) {
@@ -101,7 +91,46 @@ const FinanceAdmin = () => {
     });
   };
 
-  // Handle file preview
+  const updateStatus = async (id, newStatus) => {
+    try {
+      const response = await fetch(`http://localhost:8070/Finance/update-status/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+  
+      if (!response.ok) throw new Error("Failed to update status");
+  
+      const updatedFinance = await response.json();
+  
+      // Update local state to reflect the change
+      setSubmissions(prev => 
+        prev.map(sub => 
+          sub._id === id ? { ...sub, status: newStatus } : sub
+        )
+      );
+  
+      // Update stats
+      setStats(prev => {
+        const newStats = { ...prev };
+        const oldStatus = submissions.find(s => s._id === id)?.status;
+  
+        if (oldStatus === "pending") newStats.pending--;
+        if (oldStatus === "approved") newStats.approved--;
+  
+        if (newStatus === "pending") newStats.pending++;
+        if (newStatus === "approved") newStats.approved++;
+  
+        return newStats;
+      });
+  
+      alert(`Status updated to ${newStatus} successfully!`);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      setError(error.message);
+    }
+  };
+
   const previewFile = (filePath) => {
     if (!filePath) return;
     
@@ -113,7 +142,6 @@ const FinanceAdmin = () => {
     setShowFilePreview(true);
   };
 
-  // Handle file download
   const handleDownload = async (filePath) => {
     try {
       const filename = filePath.split('/').pop();
@@ -131,7 +159,6 @@ const FinanceAdmin = () => {
     }
   };
 
-  // Delete submission
   const deleteSubmission = async (id) => {
     if (!window.confirm('Are you sure you want to delete this submission?')) return;
     
@@ -146,8 +173,8 @@ const FinanceAdmin = () => {
       setSubmissions(prev => prev.filter(sub => sub._id !== id));
       setStats(prev => ({
         total: prev.total - 1,
-        pending: prev.pending - ((submissionToDelete?.status || 'pending') === 'pending' ? 1 : 0),
-        processed: prev.processed - (submissionToDelete?.status === 'processed' ? 1 : 0)
+        pending: prev.pending - (submissionToDelete?.status === 'pending' ? 1 : 0),
+        approved: prev.approved - (submissionToDelete?.status === 'approved' ? 1 : 0)
       }));
       
       alert('Submission deleted successfully');
@@ -158,7 +185,6 @@ const FinanceAdmin = () => {
     }
   };
 
-  // Update submission
   const updateSubmission = (id) => {
     const submission = submissions.find((sub) => sub._id === id);
     setSelectedSubmission(submission);
@@ -177,13 +203,13 @@ const FinanceAdmin = () => {
 
       setSubmissions(prev => prev.map(sub => sub._id === updatedData._id ? updatedData : sub));
       
-      if (updatedData.status !== (selectedSubmission.status || 'pending')) {
+      if (updatedData.status !== selectedSubmission.status) {
         setStats(prev => {
           const newStats = { ...prev };
-          if ((selectedSubmission.status || 'pending') === 'pending') newStats.pending--;
-          if (selectedSubmission.status === 'processed') newStats.processed--;
+          if (selectedSubmission.status === 'pending') newStats.pending--;
+          if (selectedSubmission.status === 'approved') newStats.approved--;
           if (updatedData.status === 'pending') newStats.pending++;
-          if (updatedData.status === 'processed') newStats.processed++;
+          if (updatedData.status === 'approved') newStats.approved++;
           return newStats;
         });
       }
@@ -197,7 +223,6 @@ const FinanceAdmin = () => {
     }
   };
 
-  // CSV export
   const convertToCSV = (data) => {
     const headers = ['Full Name', 'Email', 'Contact Number', 'Document Type', 'Status', 'Message', 'Files', 'Submitted At'];
     const rows = data.map((submission) => [
@@ -228,7 +253,6 @@ const FinanceAdmin = () => {
     document.body.removeChild(link);
   };
 
-  // File Preview Modal
   const FilePreviewModal = ({ fileUrl, onClose }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -315,7 +339,6 @@ const FinanceAdmin = () => {
     );
   };
 
-  // Update Form Component
   const UpdateForm = ({ submission, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({
       ...submission,
@@ -459,7 +482,6 @@ const FinanceAdmin = () => {
     );
   };
 
-  // Loading state
   if (loading) {
     return (
       <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
@@ -485,7 +507,6 @@ const FinanceAdmin = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
@@ -508,7 +529,6 @@ const FinanceAdmin = () => {
     );
   }
 
-  // Main render
   return (
     <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
       <div className="max-w-7xl mx-auto">
@@ -544,8 +564,8 @@ const FinanceAdmin = () => {
           <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 font-medium">Processed</p>
-                <p className="text-3xl font-bold text-gray-800">{stats.processed}</p>
+                <p className="text-gray-500 font-medium">Approved</p>
+                <p className="text-3xl font-bold text-gray-800">{stats.approved}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-full text-green-500">
                 <FaChartLine className="h-6 w-6" />
@@ -650,21 +670,32 @@ const FinanceAdmin = () => {
                     </td>
                     <td className="p-3 text-gray-800">{submission.documentType || 'N/A'}</td>
                     <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          statusOptions.find(o => o.value === (submission.status || 'pending'))?.color || 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {statusOptions.find(o => o.value === (submission.status || 'pending'))?.label || 'Pending'}
-                        </span>
-                        <button 
-                          className="p-1 text-green-600 hover:bg-green-50 rounded transition duration-200"
-                          title="Mark as OK"
-                          onClick={() => handleUpdate({ ...submission, status: 'processed' })}
-                        >
-                          <FaCheck className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
+  <div className="flex items-center gap-2">
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+      statusOptions.find(o => o.value === submission.status)?.color || 'bg-gray-100 text-gray-800'
+    }`}>
+      {statusOptions.find(o => o.value === submission.status)?.label || 'Pending'}
+    </span>
+    
+    {/* Approve Button */}
+    <button 
+      className="p-1 text-green-600 hover:bg-green-50 rounded transition duration-200"
+      title="Mark as Approved"
+      onClick={() => updateStatus(submission._id, "approved")}
+    >
+      <FaCheck className="h-4 w-4" />
+    </button>
+    
+    {/* Cancel Button */}
+    <button 
+      className="p-1 text-red-600 hover:bg-red-50 rounded transition duration-200"
+      title="Mark as Cancelled"
+      onClick={() => updateStatus(submission._id, "cancelled")}
+    >
+      <FaTimes className="h-4 w-4" />
+    </button>
+  </div>
+</td>
                     <td className="p-3">
                       {submission.UploadDocuments ? (
                         <button 

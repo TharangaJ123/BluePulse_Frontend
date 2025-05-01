@@ -20,8 +20,33 @@ function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [employeeName, setEmployeeName] = useState('');
   const [employeeRole, setEmployeeRole] = useState(null);
+  const [greeting, setGreeting] = useState('');
   const { employeeId } = useParams();
   const navigate = useNavigate();
+
+  // Function to get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 18) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  };
+
+  useEffect(() => {
+    // Set initial greeting
+    setGreeting(getGreeting());
+
+    // Update greeting every minute
+    const interval = setInterval(() => {
+      setGreeting(getGreeting());
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchEmployeeDetails = async () => {
@@ -127,7 +152,8 @@ function AdminDashboard() {
             <h1 className="text-xl font-semibold text-blue-800">Admin Dashboard</h1>
             <div className="flex items-center space-x-4">
               <span className="text-gray-700">
-                Welcome, <span className="font-semibold text-blue-800">{employeeName}</span>
+                <span className="font-semibold text-blue-800">{greeting}</span>,{' '}
+                <span className="font-semibold text-blue-800">{employeeName}</span>
                 {employeeRole && (
                   <span className="ml-2 text-sm text-gray-500">
                     ({employeeRole.position})

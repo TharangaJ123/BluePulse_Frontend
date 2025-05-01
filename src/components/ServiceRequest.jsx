@@ -172,6 +172,49 @@ const ServiceRequest = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formProgress, setFormProgress] = useState(0);
 
+  // Add useEffect to fetch user details from JWT
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        // Get user data from localStorage
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setFormData(prevData => ({
+            ...prevData,
+            fullName: user.full_name || '',
+            email: user.email || '',
+            phone: user.phone_number || '',
+          }));
+        } else {
+          // If no user data in localStorage, try to fetch from API
+          const token = localStorage.getItem('accessToken');
+          if (!token) return;
+
+          const response = await fetch('http://localhost:8070/User/me', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            setFormData(prevData => ({
+              ...prevData,
+              fullName: userData.full_name || '',
+              email: userData.email || '',
+              phone: userData.phone_number || '',
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
   useEffect(() => {
     if (submissionStatus) {
       const timer = setTimeout(() => setSubmissionStatus(null), 5000);

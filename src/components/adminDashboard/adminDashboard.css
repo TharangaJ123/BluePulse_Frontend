@@ -16,12 +16,15 @@
 
 /* Dark Theme */
 .admin-dashboard.dark-theme {
-  --admin-bg-primary: #1e293b;
-  --admin-text-primary: #f1f5f9;
-  --admin-bg-secondary: #0f172a;
-  --admin-accent-primary: #60a5fa;
-  --admin-accent-secondary: #93c5fd;
-  --admin-border-color: #334155;
+  --admin-bg-primary: #4a5a6a;
+  --admin-text-primary: #ffffff;
+  --admin-bg-secondary: #6b7b8c;
+  --admin-accent-primary: #3b82f6;
+  --admin-accent-secondary: #60a5fa;
+  --admin-border-color: #7c8c9d;
+  --admin-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  --admin-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 }
 
 /* Apply theme variables */
@@ -330,5 +333,141 @@
 }
 
 .admin-dashboard ::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-accent-primary);
+}
+
+/* Card styles for dark theme */
+.admin-dashboard.dark-theme .bg-white {
+  background-color: var(--admin-bg-secondary);
+  border: 1px solid var(--admin-border-color);
+  border-radius: 0.75rem;
+  box-shadow: var(--admin-shadow-sm);
+  transition: var(--admin-transition);
+}
+
+.admin-dashboard.dark-theme .bg-white:hover {
+  box-shadow: var(--admin-shadow-md);
+  transform: translateY(-2px);
+  background-color: #7c8c9d;
+}
+
+/* Text colors for dark theme */
+.admin-dashboard.dark-theme .text-gray-700,
+.admin-dashboard.dark-theme .text-gray-600,
+.admin-dashboard.dark-theme .text-gray-500 {
+  color: var(--admin-text-primary);
+  opacity: 1;
+}
+
+/* Input and select styles for dark theme */
+.admin-dashboard.dark-theme input,
+.admin-dashboard.dark-theme select,
+.admin-dashboard.dark-theme textarea {
+  background-color: var(--admin-bg-secondary);
+  color: var(--admin-text-primary);
+  border: 1px solid var(--admin-border-color);
+}
+
+.admin-dashboard.dark-theme input:focus,
+.admin-dashboard.dark-theme select:focus,
+.admin-dashboard.dark-theme textarea:focus {
+  border-color: var(--admin-accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+/* Button styles for dark theme */
+.admin-dashboard.dark-theme button {
+  background-color: var(--admin-bg-secondary);
+  color: var(--admin-text-primary);
+  border: 1px solid var(--admin-border-color);
+}
+
+.admin-dashboard.dark-theme button:hover {
+  background-color: var(--admin-accent-primary);
+  color: white;
+}
+
+.admin-dashboard.dark-theme button.primary {
+  background-color: var(--admin-accent-primary);
+  color: white;
+  border: none;
+}
+
+/* Table styles for dark theme */
+.admin-dashboard.dark-theme table {
+  background-color: var(--admin-bg-secondary);
+  color: var(--admin-text-primary);
+}
+
+.admin-dashboard.dark-theme th {
+  background-color: var(--admin-bg-primary);
+  color: var(--admin-text-primary);
+  border-bottom: 2px solid var(--admin-border-color);
+}
+
+.admin-dashboard.dark-theme td {
+  border-bottom: 1px solid var(--admin-border-color);
+}
+
+.admin-dashboard.dark-theme tr:hover td {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Sidebar styles for dark theme */
+.admin-dashboard.dark-theme .sidebar {
+  background-color: var(--admin-bg-secondary);
+  color: var(--admin-text-primary);
+  border-right: 1px solid var(--admin-border-color);
+}
+
+.admin-dashboard.dark-theme .sidebar-item:hover {
+  background-color: var(--admin-accent-primary);
+  color: white;
+}
+
+.admin-dashboard.dark-theme .sidebar-item.active {
+  background-color: var(--admin-accent-primary);
+  color: white;
+}
+
+/* Header styles for dark theme */
+.admin-dashboard.dark-theme header {
+  background-color: var(--admin-bg-primary);
+  border-bottom: 1px solid var(--admin-border-color);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+/* Status badges for dark theme */
+.admin-dashboard.dark-theme .status-badge.active {
+  background-color: rgba(72, 187, 120, 0.4);
+  color: #48bb78;
+}
+
+.admin-dashboard.dark-theme .status-badge.inactive {
+  background-color: rgba(245, 101, 101, 0.4);
+  color: #f56565;
+}
+
+.admin-dashboard.dark-theme .status-badge.pending {
+  background-color: rgba(246, 173, 85, 0.4);
+  color: #f6ad55;
+}
+
+/* Loading spinner for dark theme */
+.admin-dashboard.dark-theme .loading-spinner {
+  border: 3px solid var(--admin-border-color);
+  border-top-color: var(--admin-accent-primary);
+}
+
+/* Scrollbar styling for dark theme */
+.admin-dashboard.dark-theme ::-webkit-scrollbar-track {
+  background: var(--admin-bg-primary);
+}
+
+.admin-dashboard.dark-theme ::-webkit-scrollbar-thumb {
+  background: var(--admin-border-color);
+}
+
+.admin-dashboard.dark-theme ::-webkit-scrollbar-thumb:hover {
   background: var(--admin-accent-primary);
 } 

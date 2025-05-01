@@ -9,9 +9,19 @@ const SignIn = () => {
     password: "",
   });
 
+  const [forgotPasswordData, setForgotPasswordData] = useState({
+    email: "",
+    phone_number: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState(""); // Server error message
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetToken, setResetToken] = useState(null);
+  const [resetSuccess, setResetSuccess] = useState(false);
   const navigate = useNavigate();
 
   // Validation function
@@ -56,23 +66,32 @@ const SignIn = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting login with:', {
+        email: formData.email,
+        password: formData.password
+      });
+
       const response = await fetch("http://localhost:8070/User/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email.trim(),
+          password: formData.password.trim()
+        }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
 
+      if (response.ok) {
+        console.log('Login successful:', data);
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
         localStorage.setItem("user", JSON.stringify(data.user));
 
         navigate(`/UserProfile/${data.user._id}`);
       } else {
-        const errorData = await response.json();
-        setServerError(errorData.error || "Login failed. Please check your credentials.");
+        console.error('Login failed:', data);
+        setServerError(data.error || "Login failed. Please check your credentials.");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -84,6 +103,98 @@ const SignIn = () => {
 
   const handleGoogleSignIn = () => {
     window.location.href = "http://localhost:8070/auth/google";
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setServerError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8070/User/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: forgotPasswordData.email,
+          phone_number: forgotPasswordData.phone_number,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setResetToken(data.resetToken);
+      } else {
+        const errorData = await response.json();
+        setServerError(errorData.error || "Verification failed");
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      setServerError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setServerError("");
+
+    if (forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword) {
+      setServerError("Passwords do not match");
+      return;
+    }
+
+    if (forgotPasswordData.newPassword.length < 6) {
+      setServerError("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8070/User/reset-password", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${resetToken}`
+        },
+        body: JSON.stringify({
+          resetToken,
+          newPassword: forgotPasswordData.newPassword,
+        }),
+      });
+
+      if (response.ok) {
+        setResetSuccess(true);
+        setTimeout(() => {
+          setShowForgotPassword(false);
+          setResetSuccess(false);
+          setResetToken(null);
+          setForgotPasswordData({
+            email: "",
+            phone_number: "",
+            newPassword: "",
+            confirmPassword: "",
+          });
+        }, 3000);
+      } else {
+        const errorData = await response.json();
+        if (errorData.error === 'Reset token has expired') {
+          setServerError("Your password reset link has expired. Please request a new one.");
+          setResetToken(null);
+        } else if (errorData.error === 'No reset token found for this user') {
+          setServerError("Invalid password reset request. Please try again.");
+          setResetToken(null);
+        } else {
+          setServerError(errorData.error || "Password reset failed");
+        }
+      }
+    } catch (error) {
+      console.error("Reset password error:", error);
+      setServerError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -190,13 +301,135 @@ const SignIn = () => {
                   </button>
 
                   <p className="mt-6 text-xs text-gray-600 text-center">
-                    Don’t have an account?{" "}
+                    Don't have an account?{" "}
                     <Link to="/Register" className="text-indigo-500">
                       Sign Up
                     </Link>
                   </p>
                 </div>
               </form>
+
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+
+              {/* Forgot Password Modal */}
+              {showForgotPassword && (
+                <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+                  <div className="bg-white/90 p-8 rounded-lg w-full max-w-md shadow-xl">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-2xl font-bold">Reset Password</h2>
+                      <button
+                        onClick={() => {
+                          setShowForgotPassword(false);
+                          setResetToken(null);
+                          setForgotPasswordData({
+                            email: "",
+                            phone_number: "",
+                            newPassword: "",
+                            confirmPassword: "",
+                          });
+                        }}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {serverError && (
+                      <div className="text-red-500 text-center mb-4">{serverError}</div>
+                    )}
+
+                    {resetSuccess ? (
+                      <div className="text-green-500 text-center">
+                        Password has been reset successfully!
+                      </div>
+                    ) : !resetToken ? (
+                      <form onSubmit={handleForgotPassword}>
+                        <div className="space-y-4">
+                          <input
+                            type="email"
+                            placeholder="Email"
+                            value={forgotPasswordData.email}
+                            onChange={(e) =>
+                              setForgotPasswordData({
+                                ...forgotPasswordData,
+                                email: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                          <input
+                            type="tel"
+                            placeholder="Phone Number"
+                            value={forgotPasswordData.phone_number}
+                            onChange={(e) =>
+                              setForgotPasswordData({
+                                ...forgotPasswordData,
+                                phone_number: e.target.value.replace(/[^0-9]/g, ""),
+                              })
+                            }
+                            maxLength="10"
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                          <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                          >
+                            {loading ? "Verifying..." : "Verify"}
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleResetPassword}>
+                        <div className="space-y-4">
+                          <input
+                            type="password"
+                            placeholder="New Password"
+                            value={forgotPasswordData.newPassword}
+                            onChange={(e) =>
+                              setForgotPasswordData({
+                                ...forgotPasswordData,
+                                newPassword: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                          <input
+                            type="password"
+                            placeholder="Confirm New Password"
+                            value={forgotPasswordData.confirmPassword}
+                            onChange={(e) =>
+                              setForgotPasswordData({
+                                ...forgotPasswordData,
+                                confirmPassword: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                          <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                          >
+                            {loading ? "Resetting..." : "Reset Password"}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

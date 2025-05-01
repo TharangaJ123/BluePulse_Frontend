@@ -131,6 +131,41 @@ const EmployeeManagement = () => {
   const [isViewFormOpen, setIsViewFormOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const validateForm = (formData) => {
+    const errors = {};
+    
+    // Name validation - only letters and spaces allowed
+    if (!formData.full_name?.trim()) {
+      errors.full_name = "Name is required";
+    } else if (!/^[A-Za-z\s]+$/.test(formData.full_name)) {
+      errors.full_name = "Name can only contain letters and spaces";
+    }
+
+    // Phone number validation - exactly 10 digits
+    if (!formData.phone_number) {
+      errors.phone_number = "Phone number is required";
+    } else if (!/^\d{10}$/.test(formData.phone_number)) {
+      errors.phone_number = "Phone number must be exactly 10 digits";
+    }
+
+    // Email validation
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    // Position validation
+    if (!formData.employee_position) {
+      errors.employee_position = "Position is required";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Search filters configuration
   const searchFilters = [
     { id: 'full_name', label: 'Name' },
@@ -184,12 +219,27 @@ const EmployeeManagement = () => {
         throw new Error('Failed to fetch roles');
       }
       const data = await response.json();
-      setRoles(data); // Set the fetched roles to the state
+      console.log('Fetched roles:', data);
+
+      // Ensure we have an array of roles with proper structure
+      const rolesArray = Array.isArray(data) ? data.map(role => ({
+        id: role.role_id,
+        name: role.role_name
+      })) : [];
+
+      console.log('Processed roles:', rolesArray);
+      setRoles(rolesArray);
     } catch (error) {
       console.error('Error fetching roles:', error);
       setError(error.message);
+      setRoles([]);
     }
   };
+
+  // Add useEffect to log roles when they change
+  useEffect(() => {
+    console.log('Current roles state:', roles);
+  }, [roles]);
 
   // Update employee status in the database
   const updateEmployeeStatus = async (employeeId, newStatus) => {
@@ -1209,35 +1259,53 @@ const EmployeeManagement = () => {
   // Handle adding new employee
   const handleAddEmployee = async (formData) => {
     try {
+      // Validate form data
+      if (!validateForm(formData)) {
+        return;
+      }
+
       const response = await fetch('http://localhost:8070/Employee/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
-          password: 'password123', // Default password
-          role: 'employee' // Fixed role as "employee"
+          full_name: formData.full_name,
+          email: formData.email,
+          phone_number: formData.phone_number,
+          employee_position: formData.employee_position,
+          password: 'defaultPassword123', // You might want to make this configurable
+          role: 'employee' // Default role
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add new employee');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add employee');
       }
-
-      const addedEmployee = await response.json();
       
-      // Add the new employee to the state
-      setEmployees(prevEmployees => [...prevEmployees, addedEmployee]);
-      
-      // Close the form
+      const newEmployee = await response.json();
+      setEmployees(prevEmployees => [...prevEmployees, newEmployee]);
       setIsAddFormOpen(false);
       
-      // Show success message (you can implement a toast notification here)
-      console.log('Employee added successfully:', addedEmployee);
+      // Reset form data
+      setNewEmployee({
+        full_name: '',
+        email: '',
+        phone_number: '',
+        employee_position: '',
+      });
+      
+      // Clear validation errors
+      setValidationErrors({});
+      
+      // Show success message
+      alert('Employee added successfully!');
     } catch (error) {
       console.error('Error adding employee:', error);
       setError(error.message);
+      // Show error message to user
+      alert(`Error adding employee: ${error.message}`);
     }
   };
 
@@ -1248,9 +1316,7 @@ const EmployeeManagement = () => {
     try {
       const response = await fetch(`http://localhost:8070/Employee/employees/${selectedEmployee._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -1270,9 +1336,6 @@ const EmployeeManagement = () => {
       // Close the form
       setIsEditFormOpen(false);
       setSelectedEmployee(null);
-      
-      // Show success message
-      console.log('Employee updated successfully:', updatedEmployee);
     } catch (error) {
       console.error('Error updating employee:', error);
       setError(error.message);
@@ -1345,12 +1408,17 @@ const EmployeeManagement = () => {
                 </div>
 
           {/* Search Bar */}
-          <div className="mb-6">
-            <SearchBar
-              onSearch={handleSearch}
-              filters={searchFilters}
-              placeholder="Search employees..."
-            />
+          <div className="mb-6 relative">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search employees..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            </div>
           </div>
 
           {/* Employee Table */}
@@ -1725,28 +1793,211 @@ const EmployeeManagement = () => {
 
       {/* Add Employee Form */}
       {isAddFormOpen && (
-        <AddForm
-          isOpen={isAddFormOpen}
-          onClose={() => setIsAddFormOpen(false)}
-          onSubmit={handleAddEmployee}
-          title="Add New Employee"
-          fields={employeeFields}
-        />
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Add New Employee</h2>
+              <button onClick={() => setIsAddFormOpen(false)} className="text-gray-500 hover:text-gray-700">
+                <FaTimes />
+              </button>
+            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (validateForm(newEmployee)) {
+                handleAddEmployee(newEmployee);
+                setIsAddFormOpen(false);
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                <input
+                  type="text"
+                  name="full_name"
+                  value={newEmployee.full_name}
+                  onChange={handleNewEmployeeChange}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    validationErrors.full_name ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.full_name && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.full_name}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={newEmployee.email}
+                  onChange={handleNewEmployeeChange}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    validationErrors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.email && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.email}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone_number"
+                  value={newEmployee.phone_number}
+                  onChange={handleNewEmployeeChange}
+                  maxLength="10"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    validationErrors.phone_number ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.phone_number && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.phone_number}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Position</label>
+                <select
+                  name="employee_position"
+                  value={newEmployee.employee_position}
+                  onChange={handleNewEmployeeChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select Position</option>
+                  {roles && roles.length > 0 ? (
+                    roles.map((role) => (
+                      <option key={role.id} value={role.name}>
+                        {role.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>Loading positions...</option>
+                  )}
+                </select>
+                {validationErrors.employee_position && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.employee_position}</p>
+                )}
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddFormOpen(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700"
+                >
+                  Add Employee
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Edit Employee Form */}
       {isEditFormOpen && selectedEmployee && (
-        <AddForm
-          isOpen={isEditFormOpen}
-          onClose={() => {
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Edit Employee</h2>
+              <button onClick={() => {
             setIsEditFormOpen(false);
             setSelectedEmployee(null);
-          }}
-          onSubmit={handleEditEmployee}
-          title="Edit Employee"
-          fields={employeeFields}
-          initialValues={selectedEmployee}
-        />
+              }} className="text-gray-500 hover:text-gray-700">
+                <FaTimes />
+              </button>
+            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (validateForm(selectedEmployee)) {
+                handleEditEmployee(selectedEmployee);
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                <input
+                  type="text"
+                  name="full_name"
+                  value={selectedEmployee.full_name}
+                  onChange={(e) => setSelectedEmployee({ ...selectedEmployee, full_name: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    validationErrors.full_name ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.full_name && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.full_name}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={selectedEmployee.email}
+                  onChange={(e) => setSelectedEmployee({ ...selectedEmployee, email: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    validationErrors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.email && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.email}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone_number"
+                  value={selectedEmployee.phone_number}
+                  onChange={(e) => setSelectedEmployee({ ...selectedEmployee, phone_number: e.target.value })}
+                  maxLength="10"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    validationErrors.phone_number ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.phone_number && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.phone_number}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Position</label>
+                <select
+                  name="employee_position"
+                  value={selectedEmployee.employee_position}
+                  onChange={(e) => setSelectedEmployee({ ...selectedEmployee, employee_position: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Select Position</option>
+                  {roles.map(role => (
+                    <option key={role._id} value={role.name}>{role.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditFormOpen(false);
+                    setSelectedEmployee(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* View Employee Modal */}

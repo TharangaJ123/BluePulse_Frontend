@@ -27,6 +27,7 @@ import EmployeeProfile from "./components/adminDashboard/EmployeeProfile";
 import FAQSection from "./components/FAQ";
 import HomeFeedbackFormSection from "./components/HomeFeedbackFormSection";
 import ThankYouPage from "./components/ThankYouPage";
+import AdminProfile from "./components/adminDashboard/AdminProfile";
  
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage/>} />
 
+          <Route path="/AdminLogin" element={<AdminSignIn/>} />
           <Route path="/onlineStoreHome" element={<OnlineStoreHome/>} />
           <Route path="/onlineStoreHome_testkits" element={<OnlineStoreHome_TestKits/>} />
           <Route path="/onlineStoreHome_spareparts" element={<OnlineStoreHome_SpareParts/>} />
@@ -56,9 +58,11 @@ function App() {
           {/* Route for Login */}
           <Route path="/Login" element={<SignIn />} />
  
-          {/* Route for Login */}
+          {/* Route for AdminDashboard */}
           <Route path="/AdminDashboard/:employeeId" element={<AdminDashboard/>} />
 
+          {/* Route for AdminProfile */}
+          <Route path="/AdminProfile/:employeeId" element={<AdminProfile/>} />
           
           <Route path='/WaterTesting' element={<Water/>} />
           <Route path='/ServiceRequest' element={<ServiceRequest/>} />
@@ -73,9 +77,7 @@ function App() {
           <Route path="/SingleCommunity/:id" element={<CommunityPost/>} />
           <Route path="/FeedbackForm" element={<FeedbackForm/>} />
 
-
           <Route path="/AdminLogin" element={<AdminSignIn/>} />
-          <Route path="/AdminProfile/:id" element={<EmployeeProfile/>} />
         </Routes>
       </Router>
     </>

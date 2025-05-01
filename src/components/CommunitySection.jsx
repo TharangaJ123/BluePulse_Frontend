@@ -33,6 +33,45 @@ const CommunitySection = () => {
   const [commentText, setCommentText] = useState("");
   const navigate = useNavigate();
 
+  // Add useEffect to fetch user details from JWT
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        // Get user data from localStorage
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setFormData(prevData => ({
+            ...prevData,
+            email: user.email || '',
+          }));
+        } else {
+          // If no user data in localStorage, try to fetch from API
+          const token = localStorage.getItem('accessToken');
+          if (!token) return;
+
+          const response = await fetch('http://localhost:8070/User/me', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            setFormData(prevData => ({
+              ...prevData,
+              email: userData.email || '',
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
   // Fetch all posts when the component mounts
   useEffect(() => {
     const fetchPosts = async () => {

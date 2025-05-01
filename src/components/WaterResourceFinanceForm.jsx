@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FiUpload, FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
@@ -22,6 +22,49 @@ const WaterResourceFinanceForm = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Add useEffect to fetch user details from JWT
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        // Get user data from localStorage
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setFormData(prevData => ({
+            ...prevData,
+            fullName: user.full_name || '',
+            email: user.email || '',
+            contact: user.phone_number || '',
+          }));
+        } else {
+          // If no user data in localStorage, try to fetch from API
+          const token = localStorage.getItem('accessToken');
+          if (!token) return;
+
+          const response = await fetch('http://localhost:8070/User/me', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            setFormData(prevData => ({
+              ...prevData,
+              fullName: userData.full_name || '',
+              email: userData.email || '',
+              contact: userData.phone_number || '',
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
 
   // Validate form fields
   const validateForm = () => {

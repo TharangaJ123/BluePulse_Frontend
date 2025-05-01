@@ -7,58 +7,80 @@ const SignIn = () => {
     password: "",
   });
 
-  const [error, setError] = useState(""); // State to handle error messages
-  const [loading, setLoading] = useState(false); // State to handle loading state
-  const navigate = useNavigate(); // Hook for navigation
+  const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState(""); // Server error message
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // Handle input changes
+  // Validation function
+  const validate = () => {
+    const newErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Input handler
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
+
+    // Clear field-specific error
+    setErrors({ ...errors, [name]: "" });
+    setServerError("");
   };
 
-  // Handle form submission
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
-    setLoading(true); // Set loading state
+    if (!validate()) return;
+
+    setServerError("");
+    setLoading(true);
 
     try {
       const response = await fetch("http://localhost:8070/User/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Login successful:", data);
 
-        // Extract userID from the response
-        const userID = data._id; // Ensure the backend sends `userID` in the response
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        localStorage.setItem("user", JSON.stringify(data.user));
 
-        // Redirect to UserProfile page with userID as a parameter
-        navigate(`/UserProfile/${userID}`);
+        navigate(`/UserProfile/${data.user._id}`);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Login failed. Please check your credentials."); // Set error message
+        setServerError(errorData.error || "Login failed. Please check your credentials.");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-      setError("An error occurred. Please try again."); // Set error message
+      console.error("Login error:", error);
+      setServerError("An error occurred. Please try again.");
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
-  // Handle Google Sign-In
   const handleGoogleSignIn = () => {
-    // Redirect the user to the backend's Google OAuth endpoint
     window.location.href = "http://localhost:8070/auth/google";
   };
 
@@ -81,7 +103,6 @@ const SignIn = () => {
                   onClick={handleGoogleSignIn}
                   className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline"
                 >
-                  
                   <span className="ml-4">Sign In with Google</span>
                 </button>
               </div>
@@ -92,35 +113,48 @@ const SignIn = () => {
                 </div>
               </div>
 
-              {/* Display error message if any */}
-              {error && (
-                <div className="text-red-500 text-center mb-4">{error}</div>
+              {/* Display server error */}
+              {serverError && (
+                <div className="text-red-500 text-center mb-4">{serverError}</div>
               )}
 
               <form onSubmit={handleSubmit}>
                 <div className="mx-auto max-w-xs">
+                  {/* Email */}
                   <input
-                    className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                    className={`w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border ${
+                      errors.email ? "border-red-500" : "border-gray-200"
+                    } placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white`}
                     type="email"
                     name="email"
                     placeholder="Email"
                     value={formData.email}
                     onChange={handleChange}
-                    required
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                  )}
+
+                  {/* Password */}
                   <input
-                    className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
+                    className={`w-full px-8 py-4 mt-5 rounded-lg font-medium bg-gray-100 border ${
+                      errors.password ? "border-red-500" : "border-gray-200"
+                    } placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white`}
                     type="password"
                     name="password"
                     placeholder="Password"
                     value={formData.password}
                     onChange={handleChange}
-                    required
                   />
+                  {errors.password && (
+                    <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                  )}
+
+                  {/* Submit */}
                   <button
                     type="submit"
+                    disabled={loading}
                     className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none"
-                    disabled={loading} // Disable button when loading
                   >
                     {loading ? (
                       <span className="flex items-center">
@@ -150,8 +184,9 @@ const SignIn = () => {
                       <span className="ml-3">Sign In</span>
                     )}
                   </button>
+
                   <p className="mt-6 text-xs text-gray-600 text-center">
-                    Don't have an account?{" "}
+                    Don’t have an account?{" "}
                     <Link to="/Register" className="text-indigo-500">
                       Sign Up
                     </Link>
@@ -161,6 +196,8 @@ const SignIn = () => {
             </div>
           </div>
         </div>
+
+        {/* Right Side Illustration */}
         <div className="flex-1 bg-indigo-100 text-center hidden lg:flex">
           <div
             className="m-12 xl:m-16 w-full bg-contain bg-center bg-no-repeat"

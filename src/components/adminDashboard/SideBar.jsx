@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FaHome,                  // Dashboard
   FaUsers,                 // User Management
   FaUserTie,               // Employee Management
-  FaFlask,                 // Water Quality Testing
   FaCalendarAlt,           // Appointments
   FaStore,                 // Online Store & Inventory
   FaChartLine,             // Financial Management
@@ -11,37 +11,58 @@ import {
   FaShieldAlt,             // Role Access Management
   FaChartBar,              // Reports & Analytics
   FaCog,                   // Settings
-  FaQuestionCircle,        // Help & Support
   FaBars,                  // Sidebar Toggle
-  FaTasks,                 // Employee Task Management
+  FaShoppingCart,
+  FaMoneyBillAlt,
+  FaUserShield,
+  FaClipboardList,
+  FaTruck,
+  FaEnvelope,
+  FaSignOutAlt
 } from 'react-icons/fa'; // Import icons
 
 const Sidebar = ({ setActiveSection, activeSection }) => {
   const [isCollapsed, setIsCollapsed] = useState(false); // State to handle sidebar collapse
+  const [accessibleSections, setAccessibleSections] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get role information from localStorage
+    const roleInfo = localStorage.getItem('employeeRole');
+    if (roleInfo) {
+      const { accessibleSections } = JSON.parse(roleInfo);
+      setAccessibleSections(accessibleSections);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    // Clear role information and other stored data
+    localStorage.removeItem('employeeRole');
+    // Redirect to login page
+    navigate('/AdminLogin');
+  };
 
   // Navigation items with icons
   const navItems = [
     { text: 'Dashboard', key: 'dashboard', icon: <FaHome /> },
     { text: 'User Management', key: 'user-management', icon: <FaUsers /> },
     { text: 'Employee Management', key: 'employee-management', icon: <FaUserTie /> },
-    { text: 'Employee Task Management', key: 'employee-task-management', icon: <FaTasks /> }, // New section
-    { text: 'Water Quality Testing', key: 'water-quality-testing', icon: <FaFlask /> },
     { text: 'Appointments', key: 'appointments', icon: <FaCalendarAlt /> },
-    { text: 'Online Store & Inventory', key: 'online-store', icon: <FaStore /> },
-    { text: 'Suppliers Management', key: 'supplier-management', icon: <FaStore /> },
-    { text: 'Financial Management', key: 'financial-management', icon: <FaChartLine /> },
+    { text: 'Online Store & Inventory', key: 'online-store', icon: <FaShoppingCart /> },
+    { text: 'Suppliers Management', key: 'supplier-management', icon: <FaTruck /> },
+    { text: 'Financial Management', key: 'financial-management', icon: <FaMoneyBillAlt /> },
     { text: 'Community & Feedback', key: 'community-feedback', icon: <FaComments /> },
-    { text: 'Role Access Management', key: 'roleAccess-management', icon: <FaShieldAlt /> },
+    { text: 'Role Access Management', key: 'roleAccess-management', icon: <FaUserShield /> },
     { text: 'Reports & Analytics', key: 'reports-analytics', icon: <FaChartBar /> },
-    { text: 'Contact Us Management', key: 'contact-forms', icon: <FaCog /> },
-    { text: 'Help & Support', key: 'help-support', icon: <FaQuestionCircle /> },
+    { text: 'Contact Us Management', key: 'contact-forms', icon: <FaEnvelope /> },
+    { text: 'Settings', key: 'settings', icon: <FaCog /> },
   ];
 
   return (
     <div
       className={`${
         isCollapsed ? 'w-20' : 'w-64'
-      } bg-gradient-to-b from-blue-100 to-blue-200 text-gray-800 min-h-screen p-6 shadow-lg transition-all duration-300`}
+      } bg-gradient-to-b from-blue-100 to-blue-200 text-gray-800 min-h-screen p-6 shadow-lg transition-all duration-300 flex flex-col`}
     >
       {/* Sidebar Toggle Button */}
       <button
@@ -60,26 +81,39 @@ const Sidebar = ({ setActiveSection, activeSection }) => {
         BluePulse
       </h1>
 
-      {/* Navigation Links */}
-      <nav>
-        <ul className="space-y-3">
+      {/* Navigation Items */}
+      <nav className="flex-1">
+        <ul className="space-y-2">
           {navItems.map((item) => (
             <li key={item.key}>
               <button
                 onClick={() => setActiveSection(item.key)}
-                className={`flex items-center w-full text-left px-4 py-2 rounded-lg hover:bg-blue-50 transition duration-300 ${
-                  activeSection === item.key ? 'bg-blue-50 font-semibold' : ''
+                className={`w-full flex items-center p-3 rounded-lg transition duration-300 ${
+                  activeSection === item.key
+                    ? 'bg-blue-600 text-white'
+                    : 'hover:bg-blue-50'
                 }`}
               >
-                <span className="text-blue-800 text-xl mr-3">{item.icon}</span>
-                <span className={isCollapsed ? 'hidden' : 'block'}>
-                  {item.text}
-                </span>
+                <span className="text-xl">{item.icon}</span>
+                {!isCollapsed && (
+                  <span className="ml-3">{item.text}</span>
+                )}
               </button>
             </li>
           ))}
         </ul>
       </nav>
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="mt-auto flex items-center p-3 rounded-lg hover:bg-blue-50 transition duration-300"
+      >
+        <FaSignOutAlt className="text-xl" />
+        {!isCollapsed && (
+          <span className="ml-3">Logout</span>
+        )}
+      </button>
     </div>
   );
 };

@@ -86,7 +86,7 @@ const FAQSection = () => {
       <div className="mt-12 text-center">
         <p className="text-blue-700 mb-6">Still have questions?</p>
         <button className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md">
-          Contact Our Water Experts
+          Contact : support@bluepulse.com
         </button>
       </div>
     </section>

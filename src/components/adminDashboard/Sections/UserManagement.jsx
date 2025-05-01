@@ -12,7 +12,6 @@ import {
   FaSortUp,
   FaSortDown
 } from 'react-icons/fa';
-import SearchBar from '../Components/SearchBar';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);

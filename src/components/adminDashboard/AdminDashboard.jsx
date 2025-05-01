@@ -14,6 +14,7 @@ import RoleAccessManagement from './Sections/RoleAccesManagement';
 import SuppliersManagement from './Sections/SuppliersManagement';
 import ContactForms from './Sections/ContactForms';
 import OrderManagement from './Sections/OrderManagement';
+import './adminDashboard.css';
 
 function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');

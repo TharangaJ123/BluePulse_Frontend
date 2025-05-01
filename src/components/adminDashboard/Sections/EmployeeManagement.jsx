@@ -27,8 +27,6 @@ import {
   FaEye,          // View Employee
 } from 'react-icons/fa'; // Import icons
 import styles from './EmployeeManagement.module.css';
-import AddForm from '../Components/AddForm';
-import SearchBar from '../Components/SearchBar';
 
 const EmployeeManagement = () => {
   const [employees, setEmployees] = useState([]);

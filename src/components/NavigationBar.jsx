@@ -17,6 +17,7 @@ export default function NavigationBar() {
             className="h-15"
           />
         </motion.div>
+        
         <ul className="flex space-x-6">
           {[
             { name: "Home", path: "/" },
@@ -33,6 +34,26 @@ export default function NavigationBar() {
             </motion.li>
           ))}
         </ul>
+        
+        <div className="flex space-x-4">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-2 rounded-full text-white border border-blue-400 hover:bg-blue-400/20 transition-colors duration-300"
+          >
+            <Link to="/login">Login</Link>
+          </motion.button>
+          <motion.button
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: "0 0 15px rgba(96, 165, 250, 0.5)"
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+          >
+            <Link to="/Register">Sign Up</Link>
+          </motion.button>
+        </div>
       </nav>
     </div>
   );

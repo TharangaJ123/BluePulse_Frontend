@@ -20,6 +20,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
 import jsPDF from "jspdf";
 import { motion, AnimatePresence } from "framer-motion";
+import ModernFooter from "../Footer";
+import NavigationBar from "../NavigationBar";
 
 // Animation variants
 const containerVariants = {
@@ -1570,7 +1572,9 @@ export default function ProfileSettings() {
   };
 
   return (
-    <motion.div
+    <div>
+      <NavigationBar/>
+      <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-6"
@@ -1645,5 +1649,7 @@ export default function ProfileSettings() {
         </AnimatePresence>
       </div>
     </motion.div>
+    <ModernFooter/>
+    </div>
   );
 }

@@ -38,23 +38,57 @@ const Register = () => {
   const validate = () => {
     const newErrors = {};
 
+    // Full Name Validation
     if (!formData.full_name) {
       newErrors.full_name = "Full name is required";
+    } else if (formData.full_name.length < 2) {
+      newErrors.full_name = "Full name must be at least 2 characters";
+    } else if (formData.full_name.length > 50) {
+      newErrors.full_name = "Full name must be less than 50 characters";
+    } else if (!/^[a-zA-Z\s'-]+$/.test(formData.full_name)) {
+      newErrors.full_name = "Full name can only contain letters, spaces, hyphens, and apostrophes";
     }
 
+    // Email Validation
     if (!formData.email) {
       newErrors.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
+    } else if (formData.email.length > 100) {
+      newErrors.email = "Email must be less than 100 characters";
     }
 
+    // Phone Number Validation
+    if (formData.phone_number) {
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(formData.phone_number)) {
+        newErrors.phone_number = "Phone number must be 10 digits";
+      }
+    }
+
+    // Password Validation
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else {
+      if (formData.password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+      } else if (!/[A-Z]/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one uppercase letter";
+      } else if (!/[a-z]/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one lowercase letter";
+      } else if (!/[0-9]/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one number";
+      } else if (!/[!@#$%^&*]/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one special character (!@#$%^&*)";
+      } else if (formData.password.length > 50) {
+        newErrors.password = "Password must be less than 50 characters";
+      }
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    // Confirm Password Validation
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 

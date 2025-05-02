@@ -90,7 +90,7 @@ export default function NavigationBar() {
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-2 rounded-full text-white border border-blue-400 hover:bg-blue-400/20 transition-colors duration-300"
               >
-                <Link to="/login">Login</Link>
+                <Link to="/login-type">Login</Link>
               </motion.button>
               <motion.button
                 whileHover={{ 

@@ -26,6 +26,10 @@ const SignIn = () => {
     isOpen: false,
     message: ""
   });
+  const [successModal, setSuccessModal] = useState({
+    isOpen: false,
+    message: ""
+  });
   const navigate = useNavigate();
 
   const showError = (message) => {
@@ -37,6 +41,20 @@ const SignIn = () => {
 
   const closeErrorModal = () => {
     setErrorModal({
+      isOpen: false,
+      message: ""
+    });
+  };
+
+  const showSuccess = (message) => {
+    setSuccessModal({
+      isOpen: true,
+      message
+    });
+  };
+
+  const closeSuccessModal = () => {
+    setSuccessModal({
       isOpen: false,
       message: ""
     });
@@ -85,21 +103,25 @@ const SignIn = () => {
       const response = await fetch("http://localhost:8070/User/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email.trim(),
-          password: formData.password.trim()
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
+        // Store the token and user data
+        localStorage.setItem("accessToken", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        navigate(`/UserProfile/${data.user._id}`);
+        
+        // Show success modal
+        showSuccess("Login successful! Redirecting...");
+        
+        // Navigate after a short delay
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
       } else {
-        throw new Error(data.error || "Login failed. Please check your credentials.");
+        throw new Error(data.error || "Login failed");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -463,6 +485,27 @@ const SignIn = () => {
       onClose={closeErrorModal}
       errorMessage={errorModal.message}
     />
+    {/* Success Modal */}
+    {successModal.isOpen && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+          <div className="flex items-center justify-center mb-4">
+            <svg className="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="text-center text-gray-700 mb-4">{successModal.message}</p>
+          <div className="flex justify-center">
+            <button
+              onClick={closeSuccessModal}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 };

@@ -73,9 +73,7 @@ const WaterResourceFinanceForm = () => {
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Valid email is required";
     }
-    if (!formData.contact || !/^\d{3}-\d{3}-\d{4}$/.test(formData.contact)) {
-      newErrors.contact = "Valid contact number is required (xxx-xxx-xxxx)";
-    }
+ 
     if (files.length === 0) newErrors.files = "At least one file is required"; // Validate files
     return newErrors;
   };

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route} from "react-router-dom";
 import React from 'react'
 import './App.css'
+import 'react-toastify/dist/ReactToastify.css';
 import HomePage from './components/HomePage'
 import OnlineStoreHome from "./components/OnlineStoreHome";
 import Product from "./components/Product";

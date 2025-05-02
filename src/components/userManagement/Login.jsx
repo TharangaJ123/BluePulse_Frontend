@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ModernFooter from "../Footer";
 import NavigationBar from "../NavigationBar";
+import ErrorModal from "../common/ErrorModal";
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
@@ -17,12 +18,29 @@ const SignIn = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState(""); // Server error message
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetToken, setResetToken] = useState(null);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [errorModal, setErrorModal] = useState({
+    isOpen: false,
+    message: ""
+  });
   const navigate = useNavigate();
+
+  const showError = (message) => {
+    setErrorModal({
+      isOpen: true,
+      message
+    });
+  };
+
+  const closeErrorModal = () => {
+    setErrorModal({
+      isOpen: false,
+      message: ""
+    });
+  };
 
   // Validation function
   const validate = () => {
@@ -54,7 +72,6 @@ const SignIn = () => {
 
     // Clear field-specific error
     setErrors({ ...errors, [name]: "" });
-    setServerError("");
   };
 
   // Form submission
@@ -62,15 +79,9 @@ const SignIn = () => {
     e.preventDefault();
     if (!validate()) return;
 
-    setServerError("");
     setLoading(true);
 
     try {
-      console.log('Attempting login with:', {
-        email: formData.email,
-        password: formData.password
-      });
-
       const response = await fetch("http://localhost:8070/User/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,31 +94,51 @@ const SignIn = () => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('Login successful:', data);
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
         localStorage.setItem("user", JSON.stringify(data.user));
-
         navigate(`/UserProfile/${data.user._id}`);
       } else {
-        console.error('Login failed:', data);
-        setServerError(data.error || "Login failed. Please check your credentials.");
+        throw new Error(data.error || "Login failed. Please check your credentials.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setServerError("An error occurred. Please try again.");
+      showError(error.message || "An error occurred during login. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    window.location.href = "http://localhost:8070/auth/google";
+  const handleGoogleSignIn = async () => {
+    try {
+      const popup = window.open(
+        "http://localhost:8070/auth/google",
+        "Google Sign In",
+        "width=600,height=600"
+      );
+
+      window.addEventListener('message', async (event) => {
+        if (event.origin === 'http://localhost:8070') {
+          const { user, accessToken, refreshToken } = event.data;
+          
+          if (user && accessToken && refreshToken) {
+            localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem("refreshToken", refreshToken);
+            localStorage.setItem("user", JSON.stringify(user));
+            navigate('/');
+          } else {
+            throw new Error("Google authentication failed");
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      showError("Google authentication failed. Please try again.");
+    }
   };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-    setServerError("");
     setLoading(true);
 
     try {
@@ -120,16 +151,16 @@ const SignIn = () => {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         setResetToken(data.resetToken);
       } else {
-        const errorData = await response.json();
-        setServerError(errorData.error || "Verification failed");
+        throw new Error(data.error || "Verification failed");
       }
     } catch (error) {
       console.error("Forgot password error:", error);
-      setServerError("An error occurred. Please try again.");
+      showError(error.message || "An error occurred during password reset. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -137,21 +168,17 @@ const SignIn = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    setServerError("");
-
-    if (forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword) {
-      setServerError("Passwords do not match");
-      return;
-    }
-
-    if (forgotPasswordData.newPassword.length < 6) {
-      setServerError("Password must be at least 6 characters");
-      return;
-    }
-
     setLoading(true);
 
     try {
+      if (forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword) {
+        throw new Error("Passwords do not match");
+      }
+
+      if (forgotPasswordData.newPassword.length < 6) {
+        throw new Error("Password must be at least 6 characters");
+      }
+
       const response = await fetch("http://localhost:8070/User/reset-password", {
         method: "POST",
         headers: { 
@@ -163,6 +190,8 @@ const SignIn = () => {
           newPassword: forgotPasswordData.newPassword,
         }),
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         setResetSuccess(true);
@@ -178,20 +207,11 @@ const SignIn = () => {
           });
         }, 3000);
       } else {
-        const errorData = await response.json();
-        if (errorData.error === 'Reset token has expired') {
-          setServerError("Your password reset link has expired. Please request a new one.");
-          setResetToken(null);
-        } else if (errorData.error === 'No reset token found for this user') {
-          setServerError("Invalid password reset request. Please try again.");
-          setResetToken(null);
-        } else {
-          setServerError(errorData.error || "Password reset failed");
-        }
+        throw new Error(data.error || "Password reset failed");
       }
     } catch (error) {
       console.error("Reset password error:", error);
-      setServerError("An error occurred. Please try again.");
+      showError(error.message || "An error occurred during password reset. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -227,11 +247,6 @@ const SignIn = () => {
                   Or sign in with email
                 </div>
               </div>
-
-              {/* Display server error */}
-              {serverError && (
-                <div className="text-red-500 text-center mb-4">{serverError}</div>
-              )}
 
               <form onSubmit={handleSubmit}>
                 <div className="mx-auto max-w-xs">
@@ -341,10 +356,6 @@ const SignIn = () => {
                       </button>
                     </div>
 
-                    {serverError && (
-                      <div className="text-red-500 text-center mb-4">{serverError}</div>
-                    )}
-
                     {resetSuccess ? (
                       <div className="text-green-500 text-center">
                         Password has been reset successfully!
@@ -447,6 +458,11 @@ const SignIn = () => {
       </div>
     </div>
     <ModernFooter/>
+    <ErrorModal
+      isOpen={errorModal.isOpen}
+      onClose={closeErrorModal}
+      errorMessage={errorModal.message}
+    />
     </div>
   );
 };

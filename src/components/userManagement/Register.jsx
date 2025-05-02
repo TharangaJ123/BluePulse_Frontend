@@ -1,47 +1,61 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ModernFooter from "../Footer";
 import NavigationBar from "../NavigationBar";
+import ErrorModal from "../common/ErrorModal";
 
 const Register = () => {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
-    phone_number: "",
     password: "",
+    confirmPassword: "",
+    phone_number: "",
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [errorModal, setErrorModal] = useState({
+    isOpen: false,
+    message: ""
+  });
+  const navigate = useNavigate();
+
+  const showError = (message) => {
+    setErrorModal({
+      isOpen: true,
+      message
+    });
+  };
+
+  const closeErrorModal = () => {
+    setErrorModal({
+      isOpen: false,
+      message: ""
+    });
+  };
 
   const validate = () => {
     const newErrors = {};
 
-    // Full name: only letters and spaces allowed
-    if (!formData.full_name.trim()) {
+    if (!formData.full_name) {
       newErrors.full_name = "Full name is required";
-    } else if (!/^[A-Za-z\s]+$/.test(formData.full_name)) {
-      newErrors.full_name = "Full name can only contain letters and spaces";
     }
 
-    // Email format check
     if (!formData.email) {
       newErrors.email = "Email is required";
     } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
+      newErrors.email = "Invalid email format";
     }
 
-    // Phone number: must be exactly 10 digits, all numeric
-    if (!formData.phone_number) {
-      newErrors.phone_number = "Phone number is required";
-    } else if (!/^\d{10}$/.test(formData.phone_number)) {
-      newErrors.phone_number = "Phone number must be exactly 10 digits";
-    }
-
-    // Password length
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -54,34 +68,40 @@ const Register = () => {
       ...formData,
       [name]: value,
     });
-    setErrors({
-      ...errors,
-      [name]: "", // clear error as user types
-    });
+
+    setErrors({ ...errors, [name]: "" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
+    setLoading(true);
+
     try {
       const response = await fetch("http://localhost:8070/User/form-reg", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          full_name: formData.full_name.trim(),
+          email: formData.email.trim(),
+          password: formData.password,
+          phone_number: formData.phone_number.trim(),
+        }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
-        alert("Registration successful!");
-        window.location.href = "/Login";
+        navigate("/login");
       } else {
-        const errorData = await response.json();
-        alert(`Registration failed: ${errorData.error || "Unknown error"}`);
+        throw new Error(data.error || "Registration failed");
       }
     } catch (error) {
-      console.error("Error during registration:", error);
-      alert("An error occurred. Please try again.");
+      console.error("Registration error:", error);
+      showError(error.message || "An error occurred during registration. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -167,6 +187,21 @@ const Register = () => {
                     <p className="text-red-500 text-xs mt-1">{errors.password}</p>
                   )}
 
+                  {/* Confirm Password */}
+                  <input
+                    className={`w-full px-8 py-4 mt-5 rounded-lg font-medium bg-gray-100 border ${
+                      errors.confirmPassword ? "border-red-500" : "border-gray-200"
+                    } placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white`}
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Confirm Password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                  />
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                  )}
+
                   {/* Submit Button */}
                   <button
                     type="submit"
@@ -201,6 +236,11 @@ const Register = () => {
       </div>
     </div>
     <ModernFooter/>
+    <ErrorModal
+      isOpen={errorModal.isOpen}
+      onClose={closeErrorModal}
+      errorMessage={errorModal.message}
+    />
     </div>
   );
 };

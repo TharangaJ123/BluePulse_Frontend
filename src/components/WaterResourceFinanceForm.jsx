@@ -4,11 +4,12 @@ import { FaSpinner } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import Footer from "./Footer";
 import NavigationBar from "./NavigationBar";
-import { useLocation } from "react-router-dom";
+import { useLocation,useNavigate } from "react-router-dom";
 
 const WaterResourceFinanceForm = () => {
 
   const location = useLocation();
+  const navigate = useNavigate();
   const cartItems = location.state?.cartItems || [];
 
   const [formData, setFormData] = useState({
@@ -185,7 +186,9 @@ const WaterResourceFinanceForm = () => {
 
           if (orderResponse.ok) {
             const orderResult = await orderResponse.json();
+            navigate("/thankyou");
             console.log("Order is created successfully: " + JSON.stringify(orderResult))
+
           } else {
             throw new Error("Failed to create order in order management system");
           }

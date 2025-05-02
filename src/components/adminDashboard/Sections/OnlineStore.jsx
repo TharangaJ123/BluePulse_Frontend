@@ -7,8 +7,9 @@ import {
   FaPlus,
   FaAngleDown,
   FaAngleUp,
+  FaSearch,
 } from "react-icons/fa";
-import logo from "../../../assets/logo1.png";
+import logo from "../../../assets/bplogo_blackText.png";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import axios from "axios";
@@ -33,11 +34,11 @@ const InventoryManagement = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); 
 
-  // Define categories for the dropdown
   const categories = ["Test Kits", "Spare Parts", "Purification Items"];
 
-  // Toggle description expansion
   const toggleDescription = (productId) => {
     setExpandedDescriptions(prev => ({
       ...prev,
@@ -45,7 +46,6 @@ const InventoryManagement = () => {
     }));
   };
 
-  // Fetch product data from the backend
   useEffect(() => {
     fetchProducts();
     fetchSuppliers();
@@ -58,18 +58,17 @@ const InventoryManagement = () => {
         throw new Error("Failed to fetch products");
       }
       const data = await response.json();
-      setProducts(data); // Set the fetched data to the state
+      setProducts(data);
 
-      // Initialize quantities state with current product quantities
       const initialQuantities = data.reduce((acc, product) => {
         acc[product._id] = product.quantity;
         return acc;
       }, {});
       setQuantities(initialQuantities);
     } catch (error) {
-      setError(error.message); // Set error message if something goes wrong
+      setError(error.message);
     } finally {
-      setLoading(false); // Set loading to false after fetching
+      setLoading(false);
     }
   };
 
@@ -80,72 +79,52 @@ const InventoryManagement = () => {
         throw new Error("Failed to fetch suppliers");
       }
       const data = await response.json();
-      setSuppliers(data); // Set the fetched supplier IDs to the state
+      setSuppliers(data);
     } catch (error) {
-      setError(error.message); // Set error message if something goes wrong
+      setError(error.message);
     }
   };
 
   const downloadPDF = async () => {
-    try {
-      const doc = new jsPDF();
-
-      // Convert image to Base64
-      const response = await fetch(logo);
-      const blob = await response.blob();
-      const reader = new FileReader();
-
-      reader.onloadend = function () {
-        const base64data = reader.result; // Base64 string
-
-        // Add image to PDF
-        doc.addImage(base64data, "PNG", 10, 10, 40, 20);
-
-        // Add company details
-        doc.setFontSize(14);
-        doc.text("The Cafe House", 55, 20);
-        doc.setFontSize(10);
-        doc.text("123 Main Street, Colombo", 55, 26);
-        doc.text("Phone: +94 71 234 5678", 55, 32);
-
-        // Add title
-        doc.setFontSize(18);
-        doc.text("Supplier Details", 10, 50);
-
-        // Define table headers and data
-        const headers = [
-          "Product Name",
-          "Price",
-          "Description",
-          "Category",
-          "Quantity",
-          "Supplier",
-        ];
-        const data = products.map((product) => [
+    const doc = new jsPDF();
+    
+    const response = await fetch(logo);
+    const blob = await response.blob();
+    const reader = new FileReader();
+    
+    reader.onloadend = function() {
+      const base64data = reader.result;
+      doc.addImage(base64data, "PNG", 10, 10, 40, 20);
+      
+      doc.setFontSize(14);
+      doc.text("Order Management Report", 55, 16);
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 55, 22);
+      doc.setFontSize(10);
+      doc.text("Address: Minuwangoda Road,Gampaha", 55, 28);
+      doc.setFontSize(10);
+      doc.text("HotLine: +94 37 695 4879", 55, 34);
+      doc.setFontSize(10);
+      doc.text("Email: support@bluepulse.com", 55, 40);
+      
+      autoTable(doc, {
+        head: [['Product ID', 'Product Name', 'Price', 'Description', 'Quantity','Category','Supplier']],
+        body: filteredProducts.map(product => [
+          product._id.substring(0, 8),
           product.name,
           product.price,
-          product.description || "N/A",
-          product.category || "N/A",
-          product.quantity || "N/A",
-          product.supplier || "N/A",
-        ]);
-
-        // Generate table
-        autoTable(doc, {
-          head: [headers],
-          body: data,
-          startY: 60,
-        });
-
-        // Save the PDF
-        doc.save("supplier_details.pdf");
-      };
-
-      reader.readAsDataURL(blob); // Convert Blob to Base64
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      setError("Failed to generate PDF");
-    }
+          product.description,
+          product.quantity,
+          product.category,
+          product.supplier
+        ]),
+        startY: 50,
+      });
+      
+      doc.save("product_report.pdf");
+    };
+    
+    reader.readAsDataURL(blob);
   };
 
   // Function to handle form input changes
@@ -257,6 +236,19 @@ const InventoryManagement = () => {
       supplier: product.supplier,
     });
   };
+
+  //filtered products
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredProducts(products);
+    } else {
+      const filtered = products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product._id.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  }, [searchTerm, products]);
 
   // Function to handle updating a product
   const handleUpdateProduct = async (e) => {
@@ -413,17 +405,51 @@ const InventoryManagement = () => {
       </div>
 
       {/* Add Product Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => {
-            setShowAddProductForm(!showAddProductForm);
-          }}
-          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300 flex items-center"
-        >
-          <FaPlus className="mr-2" />{" "}
-          {showAddProductForm ? "Hide Form" : "Add Product"}
-        </button>
-      </div>
+      <div className="mb-8 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+        <div className="flex-1 sm:flex-none">
+          <button
+            onClick={() => setShowAddProductForm(!showAddProductForm)}
+            className="text-white px-4 py-2.5 rounded-lg transition-all duration-300 flex items-center shadow-md hover:shadow-lg"
+          >
+            <FaPlus className="mr-2" />
+            {showAddProductForm ? "Hide Form" : "Add Product"}
+          </button>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="relative max-w-xl mx-auto">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search products by name or ID..."
+              className="pl-10 w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <FaTimesCircle className="text-gray-400 hover:text-gray-600 transition-colors" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 sm:flex-none text-right">
+            <button
+              onClick={downloadPDF}
+              className="text-black px-4 py-2.5 rounded-lg transition-all duration-300 flex items-center shadow-md hover:shadow-lg ml-auto"
+            >
+              <FaDownload className="mr-2" />
+              <span className="hidden sm:inline">Download Inventory</span>
+              <span className="sm:hidden">Download</span>
+            </button>
+        </div>
+      </div>                                
 
       {/* Add Product Form */}
       {showAddProductForm && (
@@ -684,16 +710,6 @@ const InventoryManagement = () => {
         </div>
       )}
 
-      {/* Download Button */}
-      <div className="mb-6">
-        <button
-          onClick={downloadPDF}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
-        >
-          <FaDownload className="mr-2" /> Download Inventory Details
-        </button>
-      </div>
-
       {/* Product Details Table */}
       <div className="bg-white p-6 rounded-lg shadow-lg overflow-x-auto">
         <table className="w-full">
@@ -710,111 +726,120 @@ const InventoryManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
-              <tr key={product._id} className="border-b hover:bg-gray-50">
-                <td className="p-3">{product.name}</td>
-                <td className="p-3">${product.price}</td>
-                <td className="p-3 max-w-xs">
-                  {product.description ? (
-                    <div className="relative">
-                      <div 
-                        className={`overflow-hidden ${expandedDescriptions[product._id] ? '' : 'max-h-16'}`}
-                      >
-                        {product.description}
-                      </div>
-                      {product.description.length > 100 && (
-                        <button
-                          onClick={() => toggleDescription(product._id)}
-                          className="text-blue-500 hover:text-blue-700 text-sm mt-1 flex items-center"
+          {filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
+                <tr key={product._id} className="border-b hover:bg-gray-50">
+                  <td className="p-3 text-sm text-gray-600">{product._id}</td>
+                  <td className="p-3">{product.name}</td>
+                  <td className="p-3">${product.price}</td>
+                  <td className="p-3 max-w-xs">
+                    {product.description ? (
+                      <div className="relative">
+                        <div 
+                          className={`overflow-hidden ${expandedDescriptions[product._id] ? '' : 'max-h-16'}`}
                         >
-                          {expandedDescriptions[product._id] ? (
-                            <>
-                              <FaAngleUp className="mr-1" /> Show Less
-                            </>
-                          ) : (
-                            <>
-                              <FaAngleDown className="mr-1" /> Read More
-                            </>
-                          )}
-                        </button>
+                          {product.description}
+                        </div>
+                        {product.description.length > 100 && (
+                          <button
+                            onClick={() => toggleDescription(product._id)}
+                            className="text-blue-500 hover:text-blue-700 text-sm mt-1 flex items-center"
+                          >
+                            {expandedDescriptions[product._id] ? (
+                              <>
+                                <FaAngleUp className="mr-1" /> Show Less
+                              </>
+                            ) : (
+                              <>
+                                <FaAngleDown className="mr-1" /> Read More
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
+                  <td className="p-3">
+                    {product.imageUrl ? (
+                      <img
+                        src={`http://localhost:8070${product.imageUrl}`}
+                        className="w-10 h-10 object-cover rounded"
+                        alt={product.name}
+                      />
+                    ) : (
+                      <span className="text-gray-400">No Image</span>
+                    )}
+                  </td>
+                  <td className="p-3 whitespace-nowrap">{product.category}</td>
+                  <td className="p-3">
+                    <div className="flex items-center">
+                      {quantities[product._id] < 10 ? (
+                        <>
+                          <input
+                            type="number"
+                            value={quantities[product._id] || ""}
+                            onChange={(e) =>
+                              setQuantities((prevQuantities) => ({
+                                ...prevQuantities,
+                                [product._id]: e.target.value,
+                              }))
+                            }
+                            className="w-16 p-1 border rounded text-center"
+                            readOnly
+                          />
+                          <button
+                            onClick={() =>
+                              checkProductQuantity(
+                                product._id,
+                                quantities[product._id]
+                              )
+                            }
+                            className={`ml-2 text-white px-2 py-1 rounded text-sm ${
+                              quantities[product._id] < 10
+                                ? "bg-red-500 hover:bg-red-600"
+                                : "bg-emerald-700 hover:bg-emerald-700"
+                            }`}
+                          >
+                            Notify
+                          </button>
+                        </>
+                      ) : (
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
+                          {quantities[product._id]}
+                        </span>
                       )}
                     </div>
-                  ) : (
-                    "N/A"
-                  )}
-                </td>
-                <td className="p-3">
-                  {product.imageUrl ? (
-                    <img
-                      src={`http://localhost:8070${product.imageUrl}`}
-                      className="w-10 h-10 object-cover rounded"
-                      alt={product.name}
-                    />
-                  ) : (
-                    <span className="text-gray-400">No Image</span>
-                  )}
-                </td>
-                <td className="p-3 whitespace-nowrap">{product.category}</td>
-                <td className="p-3">
-                  <div className="flex items-center">
-                    {quantities[product._id] < 10 ? (
-                      <>
-                        <input
-                          type="number"
-                          value={quantities[product._id] || ""}
-                          onChange={(e) =>
-                            setQuantities((prevQuantities) => ({
-                              ...prevQuantities,
-                              [product._id]: e.target.value,
-                            }))
-                          }
-                          className="w-16 p-1 border rounded text-center"
-                          readOnly
-                        />
-                        <button
-                          onClick={() =>
-                            checkProductQuantity(
-                              product._id,
-                              quantities[product._id]
-                            )
-                          }
-                          className={`ml-2 text-white px-2 py-1 rounded text-sm ${
-                            quantities[product._id] < 10
-                              ? "bg-red-500 hover:bg-red-600"
-                              : "bg-emerald-700 hover:bg-emerald-700"
-                          }`}
-                        >
-                          Notify
-                        </button>
-                      </>
-                    ) : (
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
-                        {quantities[product._id]}
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-3">
-                  {suppliers.find(s => s._id === product.supplier)?.name || product.supplier}
-                </td>
-                <td className="p-3">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => deleteProduct(product._id, product.name)}
-                      className="text-white px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-sm"
-                    >
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => handleEditClick(product)}
-                      className="text-white px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-sm"
-                    >
-                      Edit
-                    </button>
-                  </div>
+                  </td>
+                  <td className="p-3">
+                    {suppliers.find(s => s._id === product.supplier)?.name || product.supplier}
+                  </td>
+                  <td className="p-3">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => deleteProduct(product._id, product.name)}
+                        className="text-white px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-sm"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => handleEditClick(product)}
+                        className="text-white px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-sm"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="9" className="p-4 text-center text-gray-500">
+                  No products found matching your search criteria.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

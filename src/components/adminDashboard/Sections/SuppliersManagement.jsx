@@ -6,7 +6,8 @@ import {
   FaDownload,    // Download
   FaPlus,        // Add Product
   FaEdit,        // Edit
-  FaTrash,       // Delete
+  FaTrash,
+  FaSearch       // Delete
 } from 'react-icons/fa'; // Import icons
 import jsPDF from 'jspdf'; // Import jsPDF library
 import autoTable from 'jspdf-autotable';
@@ -29,6 +30,8 @@ const SuppliersManagement = () => {
     email: '',
     phone: '',
   });
+  const [filteredSuppliers, setFilteredSuppliers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); 
 
   // Fetch supplier data from the backend
   useEffect(() => {
@@ -140,57 +143,57 @@ const SuppliersManagement = () => {
     setShowEditSupplierForm(true);
   };
 
+  //filtered products
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredSuppliers(suppliers);
+    } else {
+      const filtered = suppliers.filter(supplier => 
+        supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        supplier.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredSuppliers(filtered);
+    }
+  }, [searchTerm, suppliers]);  
+
   // Download PDF function
   const downloadPDF = async () => {
-    try {
-      const doc = new jsPDF();
-
-      // Convert image to Base64
-      const response = await fetch(logo);
-      const blob = await response.blob();
-      const reader = new FileReader();
-
-      reader.onloadend = function () {
-        const base64data = reader.result; // Base64 string
-
-        // Add image to PDF
-        doc.addImage(base64data, 'PNG', 10, 10, 40, 20);
-
-        // Add company details
-        doc.setFontSize(14);
-        doc.text('The Cafe House', 55, 20);
-        doc.setFontSize(10);
-        doc.text('123 Main Street, Colombo', 55, 26);
-        doc.text('Phone: +94 71 234 5678', 55, 32);
-
-        // Add title
-        doc.setFontSize(18);
-        doc.text('Supplier Details', 10, 50);
-
-        // Define table headers and data
-        const headers = ['Supplier Name', 'Email', 'Phone'];
-        const data = suppliers.map((supplier) => [
+    const doc = new jsPDF();
+    
+    const response = await fetch(logo);
+    const blob = await response.blob();
+    const reader = new FileReader();
+    
+    reader.onloadend = function() {
+      const base64data = reader.result;
+      doc.addImage(base64data, "PNG", 10, 10, 40, 20);
+      
+      doc.setFontSize(14);
+      doc.text("Order Management Report", 55, 16);
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 55, 22);
+      doc.setFontSize(10);
+      doc.text("Address: Minuwangoda Road,Gampaha", 55, 28);
+      doc.setFontSize(10);
+      doc.text("HotLine: +94 37 695 4879", 55, 34);
+      doc.setFontSize(10);
+      doc.text("Email: support@bluepulse.com", 55, 40);
+      
+      autoTable(doc, {
+        head: [['Supplier ID', 'Supplier Name', 'Email', 'Phone']],
+        body: filteredSuppliers.map(supplier => [
+          supplier._id.substring(0, 8),
           supplier.name,
           supplier.email,
-          supplier.phone || 'N/A',
-        ]);
-
-        // Generate table
-        autoTable(doc, {
-          head: [headers],
-          body: data,
-          startY: 60,
-        });
-
-        // Save the PDF
-        doc.save('supplier_details.pdf');
-      };
-
-      reader.readAsDataURL(blob); // Convert Blob to Base64
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      setError('Failed to generate PDF');
-    }
+          supplier.phone,
+        ]),
+        startY: 50,
+      });
+      
+      doc.save("product_report.pdf");
+    };
+    
+    reader.readAsDataURL(blob);
   };
 
   // Display loading state
@@ -221,14 +224,51 @@ const SuppliersManagement = () => {
     <main className="flex-1 p-8 overflow-y-auto">
       <h1 className="text-2xl font-bold text-blue-800 mb-6">Supplier Management</h1>
 
-      {/* Add Supplier Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => setShowAddSupplierForm(!showAddSupplierForm)}
-          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300 flex items-center"
-        >
-          <FaPlus className="mr-2" /> {showAddSupplierForm ? 'Hide Form' : 'Add Supplier'}
-        </button>
+      {/* Buttons */}
+      <div className="mb-8 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+        <div className="flex-1 sm:flex-none">
+          <button
+            onClick={() => showAddSupplierForm(!showAddSupplierForm)}
+            className="text-white px-4 py-2.5 rounded-lg transition-all duration-300 flex items-center shadow-md hover:shadow-lg"
+          >
+            <FaPlus className="mr-2" />
+            {showAddSupplierForm ? "Hide Form" : "Add Product"}
+          </button>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="relative max-w-xl mx-auto">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search products by name or ID..."
+              className="pl-10 w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <FaTimesCircle className="text-gray-400 hover:text-gray-600 transition-colors" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 sm:flex-none text-right">
+            <button
+              onClick={downloadPDF}
+              className="text-black px-4 py-2.5 rounded-lg transition-all duration-300 flex items-center shadow-md hover:shadow-lg ml-auto"
+            >
+              <FaDownload className="mr-2" />
+              <span className="hidden sm:inline">Download Inventory</span>
+              <span className="sm:hidden">Download</span>
+            </button>
+        </div>
       </div>
 
       {/* Add Supplier Form */}
@@ -329,16 +369,6 @@ const SuppliersManagement = () => {
         </div>
       )}
 
-      {/* Download Button */}
-      <div className="mb-6">
-        <button
-          onClick={downloadPDF}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
-        >
-          <FaDownload className="mr-2" /> Download Supplier Details
-        </button>
-      </div>
-
       {/* Supplier Details Table */}
       <div className="bg-white p-6 rounded-lg shadow-lg">
         <table className="w-full">
@@ -351,27 +381,35 @@ const SuppliersManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {suppliers.map((supplier) => (
-              <tr key={supplier._id} className="border-b">
-                <td className="p-3">{supplier.name}</td>
-                <td className="p-3">{supplier.email}</td>
-                <td className="p-3">{supplier.phone || 'N/A'}</td>
-                <td className="p-3 flex space-x-2">
-                  <button
-                    onClick={() => openEditForm(supplier)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
-                  >
-                    <FaEdit className="mr-1" /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(supplier._id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded-lg hover:bg-red-600 transition duration-300 flex items-center"
-                  >
-                    <FaTrash className="mr-1" /> Delete
-                  </button>
+            {filteredSuppliers.length > 0 ? (
+              filteredSuppliers.map((supplier) => (
+                <tr key={supplier._id} className="border-b hover:bg-gray-50">
+                  <td className="p-3">{supplier.name}</td>
+                  <td className="p-3">{supplier.email}</td>
+                  <td className="p-3">{supplier.phone || 'N/A'}</td>
+                  <td className="p-3 flex space-x-2">
+                    <button
+                      onClick={() => openEditForm(supplier)}
+                      className="bg-blue-500 text-white px-2 py-1 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
+                    >
+                      <FaEdit className="mr-1" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(supplier._id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded-lg hover:bg-red-600 transition duration-300 flex items-center"
+                    >
+                      <FaTrash className="mr-1" /> Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="9" className="p-4 text-center text-gray-500">
+                  No suppliers found matching your search criteria.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

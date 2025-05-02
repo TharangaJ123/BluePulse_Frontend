@@ -134,8 +134,8 @@ function AdminDashboard() {
         return <RoleAccessManagement />;
       case 'employee-task-management':
         return <EmployeeTaskManagement />;
-      case 'employee-task-management':
-        return <EmployeeTaskManagement />;
+      case 'contact-form-management':
+        return <ContactForms/>;
       case 'order-management':
         return <OrderManagement/>;
       default:

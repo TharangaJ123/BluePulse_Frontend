@@ -24,11 +24,11 @@ import AdminSignIn from "./components/adminDashboard/AdminLogin";
 import OnlineStoreHome_TestKits from "./components/OnlineStoreHome_TestKits";
 import OnlineStoreHome_SpareParts from "./components/OnlineStoreHome_SpareParts";
 import OnlineStoreHome_PurificationItems from "./components/OnlineStoreHome_PurificationItems";
-import EmployeeProfile from "./components/adminDashboard/EmployeeProfile";
 import FAQSection from "./components/FAQ";
 import HomeFeedbackFormSection from "./components/HomeFeedbackFormSection";
 import ThankYouPage from "./components/ThankYouPage";
 import AdminProfile from "./components/adminDashboard/AdminProfile";
+import LoginType from './components/userManagement/LoginType';
  
 function App() {
   return (
@@ -38,7 +38,12 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage/>} />
 
-          <Route path="/AdminLogin" element={<AdminSignIn/>} />
+          {/* Login Routes */}
+          <Route path="/login-type" element={<LoginType/>} />
+          <Route path="/login" element={<SignIn/>} />
+          <Route path="/admin-login" element={<AdminSignIn/>} />
+
+        
           <Route path="/onlineStoreHome" element={<OnlineStoreHome/>} />
           <Route path="/onlineStoreHome_testkits" element={<OnlineStoreHome_TestKits/>} />
           <Route path="/onlineStoreHome_spareparts" element={<OnlineStoreHome_SpareParts/>} />
@@ -56,8 +61,7 @@ function App() {
           {/* Route for Register */}
           <Route path="/Register" element={<Register/>} />
  
-          {/* Route for Login */}
-          <Route path="/Login" element={<SignIn />} />
+         
  
           {/* Route for AdminDashboard */}
           <Route path="/AdminDashboard/:employeeId" element={<AdminDashboard/>} />

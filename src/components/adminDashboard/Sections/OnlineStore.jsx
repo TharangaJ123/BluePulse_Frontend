@@ -715,6 +715,7 @@ const InventoryManagement = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b">
+              <th className="text-left p-3 text-gray-700">Product ID</th>
               <th className="text-left p-3 text-gray-700">Product Name</th>
               <th className="text-left p-3 text-gray-700">Price</th>
               <th className="text-left p-3 text-gray-700">Description</th>

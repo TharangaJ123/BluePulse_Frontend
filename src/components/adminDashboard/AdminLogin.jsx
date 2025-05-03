@@ -150,7 +150,7 @@ const AdminSignIn = () => {
           className="text-center mb-8"
         >
           <img
-            src="./src/assets/logo1.png"
+            src="./src/assets/bplogo_blackText.png"
             className="w-32 mx-auto mb-4"
             alt="BluePulse Logo"
           />

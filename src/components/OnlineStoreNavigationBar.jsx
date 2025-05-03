@@ -24,11 +24,6 @@ export default function OnlineStoreNavigationBar({ searchQuery, setSearchQuery }
               className="px-4 py-2 border bg-white rounded-lg focus:ring-2 focus:ring-blue-400 outline-none hidden md:block"
             />
 
-            <a href="/cart" className="relative">
-              <span className="text-2xl text-white hover:text-blue-600">🛍️</span>
-              <span className="absolute top-0 right-0 text-xs bg-red-500 text-white rounded-full px-1">2</span>
-            </a>
-
             <button className="md:hidden text-white text-2xl">
               ☰
             </button>

@@ -461,7 +461,7 @@ const OrderManagement = () => {
                         {order.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-medium text-gray-500">
-                        ${order.totalAmount.toFixed(2)}
+                        Rs.{order.totalAmount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col">

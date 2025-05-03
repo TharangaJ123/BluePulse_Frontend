@@ -104,6 +104,10 @@ export default function NavigationBar() {
               </motion.button>
             </>
           )}
+          <a href="/cart" className="relative">
+              <span className="text-2xl text-white hover:text-blue-600">🛍️</span>
+              <span className="absolute top-0 right-0 text-xs bg-red-500 text-white rounded-full px-1">2</span>
+            </a>
         </div>
       </nav>
     </div>

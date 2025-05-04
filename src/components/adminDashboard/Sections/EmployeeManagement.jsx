@@ -183,11 +183,14 @@ const EmployeeManagement = () => {
   const filteredEmployees = employees.filter((employee) => {
     if (!searchQuery) return true;
     
-    return Object.entries(activeFilters).some(([key, isActive]) => {
-      if (!isActive) return false;
-      const value = employee[key]?.toString().toLowerCase() || '';
-      return value.includes(searchQuery.toLowerCase());
-    });
+    const searchTerm = searchQuery.toLowerCase();
+    return (
+      employee.full_name?.toLowerCase().includes(searchTerm) ||
+      employee.email?.toLowerCase().includes(searchTerm) ||
+      employee.employee_position?.toLowerCase().includes(searchTerm) ||
+      employee.department?.toLowerCase().includes(searchTerm) ||
+      employee.status?.toLowerCase().includes(searchTerm)
+    );
   });
 
   // Fetch employee data and roles from the backend
@@ -1351,30 +1354,6 @@ const EmployeeManagement = () => {
           onClick={() => setActiveSection('overview')}
         >
           Overview
-        </button>
-        <button 
-          className={`${styles['nav-button']} ${activeSection === 'performance' ? styles.active : ''}`}
-          onClick={() => setActiveSection('performance')}
-        >
-          Performance
-        </button>
-        <button 
-          className={`${styles['nav-button']} ${activeSection === 'attendance' ? styles.active : ''}`}
-          onClick={() => setActiveSection('attendance')}
-        >
-          Attendance
-        </button>
-        <button 
-          className={`${styles['nav-button']} ${activeSection === 'leave' ? styles.active : ''}`}
-          onClick={() => setActiveSection('leave')}
-        >
-          Leave
-        </button>
-        <button 
-          className={`${styles['nav-button']} ${activeSection === 'training' ? styles.active : ''}`}
-          onClick={() => setActiveSection('training')}
-        >
-          Training
         </button>
       </div>
 

@@ -487,8 +487,9 @@ const SignIn = () => {
     />
     {/* Success Modal */}
     {successModal.isOpen && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md" onClick={closeSuccessModal}></div>
+        <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative z-50">
           <div className="flex items-center justify-center mb-4">
             <svg className="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
